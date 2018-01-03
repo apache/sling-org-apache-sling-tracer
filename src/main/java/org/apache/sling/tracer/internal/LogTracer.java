@@ -43,18 +43,16 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.turbo.TurboFilter;
 import ch.qos.logback.core.spi.FilterReply;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 
@@ -69,14 +67,8 @@ import static org.apache.sling.tracer.internal.Util.trimToNull;
  * For such parts enabling the log at global level would flood the logs and create lots of noise.
  * Using Tracer one can enable log for that request which is required to be probed
  */
-@Component(
-        label = "Apache Sling Log Tracer",
-        description = "Provides support for enabling log for specific loggers on per request basis. " +
-                "Refer to http://sling.apache.org/documentation/bundles/log-tracers.html for " +
-                "more details",
-        policy = ConfigurationPolicy.REQUIRE,
-        metatype = true
-)
+@Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Designate(ocd = Configuration.class)
 public class LogTracer {
     /**
      * Request parameter name having comma separated value to determine list of tracers to
@@ -95,59 +87,7 @@ public class LogTracer {
 
     public static final String HEADER_TRACER = "Sling-Tracers";
 
-    @Property(label = "Tracer Sets",
-            description = "Default list of tracer sets configured. Tracer Set config confirms " +
-                    "to following format. <set name> : <logger name>;level=<level name>, other loggers",
-            unbounded = PropertyUnbounded.ARRAY,
-            value = {
-                    "oak-query : org.apache.jackrabbit.oak.query.QueryEngineImpl;level=debug",
-                    "oak-writes : org.apache.jackrabbit.oak.jcr.operations.writes;level=trace"
-            }
-    )
-    private static final String PROP_TRACER_SETS = "tracerSets";
 
-    private static final boolean PROP_TRACER_ENABLED_DEFAULT = false;
-    @Property(label = "Enabled",
-            description = "Enable the Tracer",
-            boolValue = PROP_TRACER_ENABLED_DEFAULT
-    )
-    private static final String PROP_TRACER_ENABLED = "enabled";
-
-    private static final boolean PROP_TRACER_SERVLET_ENABLED_DEFAULT = false;
-    @Property(label = "Recording Servlet Enabled",
-            description = "Enable the Tracer Servlet. This servlet is required for the tracer recording feature " +
-                    "to work and provides access to the json dump of the recording performed",
-            boolValue = PROP_TRACER_SERVLET_ENABLED_DEFAULT
-    )
-    private static final String PROP_TRACER_SERVLET_ENABLED = "servletEnabled";
-
-    static final int PROP_TRACER_SERVLET_CACHE_SIZE_DEFAULT = 50;
-    @Property(label = "Recording Cache Size",
-            description = "Recording cache size in MB which would be used to temporary cache the recording data",
-            intValue = PROP_TRACER_SERVLET_CACHE_SIZE_DEFAULT
-    )
-    private static final String PROP_TRACER_SERVLET_CACHE_SIZE = "recordingCacheSizeInMB";
-
-    static final long PROP_TRACER_SERVLET_CACHE_DURATION_DEFAULT = 60 * 15;
-    @Property(label = "Recording Cache Duration",
-            description = "Time in seconds upto which the recording data would be held in memory before expiry",
-            longValue = PROP_TRACER_SERVLET_CACHE_DURATION_DEFAULT
-    )
-    private static final String PROP_TRACER_SERVLET_CACHE_DURATION = "recordingCacheDurationInSecs";
-
-    static final boolean PROP_TRACER_SERVLET_COMPRESS_DEFAULT = true;
-    @Property(label = "Compress Recording",
-            description = "Enable compression for recoding held in memory",
-            boolValue = PROP_TRACER_SERVLET_COMPRESS_DEFAULT
-    )
-    private static final String PROP_TRACER_SERVLET_COMPRESS = "recordingCompressionEnabled";
-
-    static final boolean PROP_TRACER_SERVLET_GZIP_RESPONSE_DEFAULT = true;
-    @Property(label = "GZip Response",
-            description = "If enabled the response sent would be compressed",
-            boolValue = PROP_TRACER_SERVLET_GZIP_RESPONSE_DEFAULT
-    )
-    private static final String PROP_TRACER_SERVLET_GZIP_RESPONSE = "gzipResponse";
 
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(LogTracer.class);
 
@@ -172,24 +112,19 @@ public class LogTracer {
     private TraceLogRecorder recorder = TraceLogRecorder.DEFAULT;
 
     @Activate
-    private void activate(Map<String, ?> config, BundleContext context) {
+    private void activate(Configuration config, BundleContext context) {
         this.bundleContext = context;
         initializeTracerSet(config);
-        boolean enabled = PropertiesUtil.toBoolean(config.get(PROP_TRACER_ENABLED), PROP_TRACER_ENABLED_DEFAULT);
+        boolean enabled = config.enabled();
         if (enabled) {
             registerFilters(context);
-            boolean servletEnabled = PropertiesUtil.toBoolean(config.get(PROP_TRACER_SERVLET_ENABLED),
-                    PROP_TRACER_SERVLET_ENABLED_DEFAULT);
+            boolean servletEnabled = config.servletEnabled();
 
             if (servletEnabled) {
-                int cacheSize = PropertiesUtil.toInteger(config.get(PROP_TRACER_SERVLET_CACHE_SIZE),
-                        PROP_TRACER_SERVLET_CACHE_SIZE_DEFAULT);
-                long cacheDuration = PropertiesUtil.toLong(config.get(PROP_TRACER_SERVLET_CACHE_DURATION),
-                        PROP_TRACER_SERVLET_CACHE_DURATION_DEFAULT);
-                boolean compressionEnabled = PropertiesUtil.toBoolean(config.get(PROP_TRACER_SERVLET_COMPRESS),
-                        PROP_TRACER_SERVLET_COMPRESS_DEFAULT);
-                boolean gzipResponse = PropertiesUtil.toBoolean(config.get(PROP_TRACER_SERVLET_GZIP_RESPONSE),
-                        PROP_TRACER_SERVLET_GZIP_RESPONSE_DEFAULT);
+                int cacheSize = config.recordingCacheSizeInMB();
+                long cacheDuration = config.recordingCacheDurationInSecs();
+                boolean compressionEnabled = config.recordingCompressionEnabled();
+                boolean gzipResponse = config.gzipResponse();
 
                 this.logServlet = new TracerLogServlet(context, cacheSize, cacheDuration, compressionEnabled, gzipResponse);
                 recorder = logServlet;
@@ -259,10 +194,8 @@ public class LogTracer {
         return new TracerContext(configs.toArray(new TracerConfig[configs.size()]), recording);
     }
 
-    private void initializeTracerSet(Map<String, ?> config) {
-        String[] tracerSetConfigs = PropertiesUtil.toStringArray(config.get(PROP_TRACER_SETS), new String[0]);
-
-        for (String tracerSetConfig : tracerSetConfigs) {
+    private void initializeTracerSet(Configuration config) {
+        for (String tracerSetConfig : config.tracerSets()) {
             TracerSet tc = new TracerSet(tracerSetConfig);
             tracers.put(tc.getName(), tc);
         }

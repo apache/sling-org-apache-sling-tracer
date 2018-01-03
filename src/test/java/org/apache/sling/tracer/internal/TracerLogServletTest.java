@@ -68,14 +68,14 @@ public class TracerLogServletTest {
 
     @Test
     public void noRecordingByDefault() throws Exception{
-        TracerLogServlet logServlet = new TracerLogServlet(context.bundleContext());
+        TracerLogServlet logServlet = newLogServlet();
         assertSame(Recording.NOOP, logServlet.startRecording(request, response));
         assertSame(Recording.NOOP, logServlet.getRecordingForRequest(request));
     }
 
     @Test
     public void recordingWhenRequested() throws Exception{
-        TracerLogServlet logServlet = new TracerLogServlet(context.bundleContext());
+        TracerLogServlet logServlet = newLogServlet();
         request = new MockSlingHttpServletRequest(context.bundleContext());
 
         Recording recording = logServlet.startRecording(request, response);
@@ -98,7 +98,7 @@ public class TracerLogServletTest {
 
     @Test
     public void jsonRendering() throws Exception{
-        TracerLogServlet logServlet = new TracerLogServlet(context.bundleContext());
+        TracerLogServlet logServlet = newLogServlet();
         when(request.getMethod()).thenReturn("GET");
         when(request.getHeader(TracerLogServlet.HEADER_TRACER_RECORDING)).thenReturn("true");
 
@@ -123,7 +123,7 @@ public class TracerLogServletTest {
 
     @Test
     public void gzipResponse() throws Exception{
-        TracerLogServlet logServlet = new TracerLogServlet(context.bundleContext());
+        TracerLogServlet logServlet = newLogServlet();
         when(request.getMethod()).thenReturn("GET");
         when(request.getHeader(TracerLogServlet.HEADER_TRACER_RECORDING)).thenReturn("true");
         when(request.getHeader("Accept-Encoding")).thenReturn("gzip, deflate");
@@ -150,9 +150,13 @@ public class TracerLogServletTest {
         verify(response).setHeader("Content-Encoding" , "gzip");
     }
 
+    private TracerLogServlet newLogServlet() {
+        return new TracerLogServlet(context.bundleContext(), 50, 60*15, true, true);
+    }
+
     @Test
     public void pluginRendering() throws Exception{
-        TracerLogServlet logServlet = new TracerLogServlet(context.bundleContext());
+        TracerLogServlet logServlet = newLogServlet();
         when(request.getRequestURI()).thenReturn("/system/console/tracer" );
 
         StringWriter sw = new StringWriter();

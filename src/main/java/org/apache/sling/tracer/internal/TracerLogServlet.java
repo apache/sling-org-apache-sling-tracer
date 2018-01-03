@@ -67,15 +67,6 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
 
     private final boolean gzipResponse;
 
-    public TracerLogServlet(BundleContext context){
-        this(context,
-                LogTracer.PROP_TRACER_SERVLET_CACHE_SIZE_DEFAULT,
-                LogTracer.PROP_TRACER_SERVLET_CACHE_DURATION_DEFAULT,
-                LogTracer.PROP_TRACER_SERVLET_COMPRESS_DEFAULT,
-                LogTracer.PROP_TRACER_SERVLET_GZIP_RESPONSE_DEFAULT
-        );
-    }
-
     public TracerLogServlet(BundleContext context, int cacheSizeInMB, long cacheDurationInSecs,
                             boolean compressionEnabled, boolean gzipResponse) {
         super(LABEL, "Sling Tracer", "Sling", null);

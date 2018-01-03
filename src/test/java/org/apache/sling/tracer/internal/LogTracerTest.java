@@ -101,7 +101,7 @@ public class LogTracerTest {
         assertEquals(2, context.getServices(Filter.class, null).length);
         assertNull(context.getService(Servlet.class));
 
-        MockOsgi.deactivate(tracer);
+        MockOsgi.deactivate(tracer, context.bundleContext());
         assertNull(context.getService(Filter.class));
     }
 
@@ -114,10 +114,10 @@ public class LogTracerTest {
 
         TracerLogServlet logServlet = (TracerLogServlet) context.getService(Servlet.class);
         assertEquals(true, logServlet.isCompressRecording());
-        assertEquals(LogTracer.PROP_TRACER_SERVLET_CACHE_SIZE_DEFAULT, logServlet.getCacheSizeInMB());
-        assertEquals(LogTracer.PROP_TRACER_SERVLET_CACHE_DURATION_DEFAULT, logServlet.getCacheDurationInSecs());
+        assertEquals(50, logServlet.getCacheSizeInMB());
+        assertEquals(60*15, logServlet.getCacheDurationInSecs());
 
-        MockOsgi.deactivate(tracer);
+        MockOsgi.deactivate(tracer, context.bundleContext());
         assertNull(context.getService(Filter.class));
         assertNull(context.getService(Servlet.class));
     }
