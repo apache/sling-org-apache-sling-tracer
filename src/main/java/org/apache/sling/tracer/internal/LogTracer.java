@@ -62,7 +62,7 @@ import static org.apache.sling.tracer.internal.Util.trimToNull;
  * Tracer provides support for enabling the logs for specific category at specific level and
  * only for specific request. It provides a very fine level of control via config provided
  * as part of HTTP request around how the logging should be performed for given category.
- * <p/>
+ *
  * This is specially useful for those parts of the system which are involved in every request.
  * For such parts enabling the log at global level would flood the logs and create lots of noise.
  * Using Tracer one can enable log for that request which is required to be probed
@@ -78,7 +78,6 @@ public class LogTracer {
 
     /**
      * Request param used to determine tracer config as part of request itself. Like
-     * <p/>
      * org.apache.sling;level=trace,org.apache.jackrabbit
      */
     public static final String PARAM_TRACER_CONFIG = "tracerConfig";
