@@ -358,6 +358,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         String query;
         String plan;
         String caller;
+        int subPlans = 0;
 
         public void record(Level level, String logger, FormattingTuple tuple) {
             //Assuming in a series of log statement from query package we see 'query'
@@ -387,14 +388,42 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
                     if ("org.apache.jackrabbit.oak.query.QueryImpl".equals(logger)
                             && msg.startsWith("query plan ")){
                         //logDebug("query execute " + statement);
-                        plan = msg.substring("query plan ".length());
+                        if (subPlans == 0) {
+                            plan = msg.substring("query plan ".length());
+                        } else {
+                            subPlans--;
+                        }
                     } else if ("org.apache.jackrabbit.oak.query.UnionQueryImpl".equals(logger)
                             && msg.contains("query union plan") && args.length > 0){
                         // LOG.debug("query union plan {}", getPlan());
                         plan = nullSafeString(args[0]);
+
+                        // Determine number of sub-queries in this UNION query so they can be ignored
+                        int tmp = count(plan, "*/ union ");
+                        if (tmp > 0) {
+                            subPlans = tmp + 1;
+                        }
                     }
                 }
             }
+        }
+
+        /**
+         * Counts the number of instances the needle in the haystack.
+         * @param haystack the string to count the occurrences of the needle in.
+         * @param needle the string to count the number of occurrences of.
+         * @return the number of occurences the needle appears in the haystack.
+         */
+        private int count(final String haystack, final String needle) {
+            int count = 0;
+            int i = 0;
+
+            while ((i = haystack.indexOf(needle, i)) != -1) {
+                i++;
+                count++;
+            }
+
+            return count;
         }
 
         private String determineCaller() {
