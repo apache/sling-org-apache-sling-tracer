@@ -46,4 +46,11 @@ public class UtilTest {
         assertEquals("foo", Util.nullSafeTrim(" foo"));
     }
 
+    @Test
+    public void count() throws Exception{
+        assertEquals(2, Util.count("she sell sea shells on the sea shore", "sea"));
+        assertEquals(1, Util.count("she sell sea shells on the sea shore", "shore"));
+        assertEquals(0, Util.count("she sell sea shells on the sea shore", "tiger"));
+    }
+
 }

@@ -44,4 +44,22 @@ class Util {
         }
         return s.trim();
     }
+
+    /**
+     * Counts the number of instances the needle in the haystack.
+     * @param haystack the string to count the occurrences of the needle in.
+     * @param needle the string to count the number of occurrences of.
+     * @return the number of occurences the needle appears in the haystack.
+     */
+    static int count(final String haystack, final String needle) {
+        int count = 0;
+        int i = 0;
+
+        while ((i = haystack.indexOf(needle, i)) != -1) {
+            i++;
+            count++;
+        }
+
+        return count;
+    }
 }

@@ -54,6 +54,7 @@ import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.apache.sling.tracer.internal.Util.count;
 import static org.apache.sling.tracer.internal.Util.nullSafeString;
 import static org.apache.sling.tracer.internal.Util.nullSafeTrim;
 
@@ -399,31 +400,13 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
                         plan = nullSafeString(args[0]);
 
                         // Determine number of sub-queries in this UNION query so they can be ignored
-                        int tmp = count(plan, "*/ union ");
-                        if (tmp > 0) {
-                            subPlans = tmp + 1;
+                        int unionCount = count(plan, "*/ union ");
+                        if (unionCount > 0) {
+                            subPlans = unionCount + 1;
                         }
                     }
                 }
             }
-        }
-
-        /**
-         * Counts the number of instances the needle in the haystack.
-         * @param haystack the string to count the occurrences of the needle in.
-         * @param needle the string to count the number of occurrences of.
-         * @return the number of occurences the needle appears in the haystack.
-         */
-        private int count(final String haystack, final String needle) {
-            int count = 0;
-            int i = 0;
-
-            while ((i = haystack.indexOf(needle, i)) != -1) {
-                i++;
-                count++;
-            }
-
-            return count;
         }
 
         private String determineCaller() {
