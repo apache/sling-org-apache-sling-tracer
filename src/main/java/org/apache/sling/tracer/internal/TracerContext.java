@@ -89,7 +89,7 @@ class TracerContext {
         FormattingTuple tuple = null;
         if (QUERY_LOGGER.equals(logger)
                 && params != null && params.length == 2) {
-            if (logQuery((String) params[1])){
+            if (logQuery(String.valueOf(params[1]))){
                 //Get original log message
                 tuple = logWithLoggerName(logger, format, params);
             }
