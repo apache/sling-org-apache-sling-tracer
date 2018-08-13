@@ -19,7 +19,7 @@
 
 package org.apache.sling.tracer.internal;
 
-import javax.annotation.CheckForNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Utility to find out the real caller by excluding stack elements belonging to
@@ -38,7 +38,7 @@ class CallerFinder {
         this.apiPkgs = apiPkgs;
     }
 
-    @CheckForNull
+    @Nullable
     public StackTraceElement determineCaller(StackTraceElement[] stack) {
         if (stack == null) {
             return null;

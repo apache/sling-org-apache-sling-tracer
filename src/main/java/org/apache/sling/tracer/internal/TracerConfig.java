@@ -19,11 +19,11 @@
 
 package org.apache.sling.tracer.internal;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.core.CoreConstants;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 class TracerConfig implements Comparable<TracerConfig> {
     enum MatchResult {
@@ -68,7 +68,7 @@ class TracerConfig implements Comparable<TracerConfig> {
     }
 
     @Override
-    public int compareTo(@Nonnull TracerConfig o) {
+    public int compareTo(@NotNull TracerConfig o) {
         int comp = depth > o.depth ? -1 : depth < o.depth ? 1 : 0;
         if (comp == 0) {
             comp = loggerName.compareTo(o.loggerName);

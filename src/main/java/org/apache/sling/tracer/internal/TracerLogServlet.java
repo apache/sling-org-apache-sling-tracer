@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -40,6 +39,7 @@ import com.google.common.cache.Weigher;
 import org.apache.commons.io.FileUtils;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
+import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.BundleContext;
 
 class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorder {
@@ -78,7 +78,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
                 .maximumWeight(cacheSizeInMB * FileUtils.ONE_MB)
                 .weigher(new Weigher<String, JSONRecording>() {
                     @Override
-                    public int weigh(@Nonnull  String key, @Nonnull JSONRecording value) {
+                    public int weigh(@NotNull  String key, @NotNull JSONRecording value) {
                         return value.size();
                     }
                 })

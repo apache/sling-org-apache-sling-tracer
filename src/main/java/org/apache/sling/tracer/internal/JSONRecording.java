@@ -40,7 +40,6 @@ import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 
 import ch.qos.logback.classic.Level;
@@ -48,6 +47,7 @@ import com.google.common.primitives.Longs;
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.sling.api.request.RequestProgressTracker;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.FormattingTuple;
@@ -246,7 +246,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
     }
 
     @Override
-    public int compareTo(@Nonnull JSONRecording o) {
+    public int compareTo(@NotNull JSONRecording o) {
         return Longs.compare(start, o.start);
     }
 
