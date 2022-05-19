@@ -181,7 +181,7 @@ public class TracerLogServletTest {
 
         @Override
         public boolean isReady() {
-            return false;
+            return true;
         }
 
         @Override
