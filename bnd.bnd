@@ -1,0 +1,7 @@
+Bundle-DocURL: https://sling.apache.org/documentation/bundles/log-tracers.html
+
+-includeresource:\
+    @org.apache.felix.utils-*.jar!/org/apache/felix/utils/json/JSONWriter.class
+
+-removeheaders:\
+  Include-Resource
