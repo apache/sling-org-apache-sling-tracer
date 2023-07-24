@@ -19,10 +19,9 @@
 
 package org.apache.sling.tracer.internal;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 
 /**
  * Filter which returns false if the package of stack trace element
@@ -32,11 +31,17 @@ class PrefixExcludeFilter implements CallerFilter{
     private final List<String> prefixesToExclude;
 
     public PrefixExcludeFilter(List<String> prefixes) {
-        this.prefixesToExclude = ImmutableList.copyOf(prefixes);
+        this.prefixesToExclude = Collections.unmodifiableList(prefixes);
     }
 
-    public static PrefixExcludeFilter from(String filter){
-        List<String> prefixes = Splitter.on('|').omitEmptyStrings().trimResults().splitToList(filter);
+    public static PrefixExcludeFilter from(String filter) {
+        final List<String> prefixes = new ArrayList<>();
+        for(String v : filter.split("\\|")) {
+            v = v.trim();
+            if (!v.isEmpty()) {
+                prefixes.add(v);
+            }
+        }
         return new PrefixExcludeFilter(prefixes);
     }
 

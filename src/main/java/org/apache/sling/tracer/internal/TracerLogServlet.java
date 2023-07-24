@@ -25,7 +25,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -33,13 +37,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.Weigher;
-import org.apache.commons.io.FileUtils;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
-import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.BundleContext;
 
 class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorder {
@@ -57,7 +56,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
 
     public static final int TRACER_PROTOCOL_VERSION = 1;
 
-    private final Cache<String, JSONRecording> cache;
+    private final BoundedCache cache;
 
     private final boolean compressRecording;
 
@@ -74,17 +73,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
         this.cacheDurationInSecs = cacheDurationInSecs;
         this.cacheSizeInMB = cacheSizeInMB;
         this.gzipResponse = compressionEnabled && gzipResponse;
-        this.cache = CacheBuilder.newBuilder()
-                .maximumWeight(cacheSizeInMB * FileUtils.ONE_MB)
-                .weigher(new Weigher<String, JSONRecording>() {
-                    @Override
-                    public int weigh(@NotNull  String key, @NotNull JSONRecording value) {
-                        return value.size();
-                    }
-                })
-                .expireAfterAccess(cacheDurationInSecs, TimeUnit.SECONDS)
-                .recordStats()
-                .build();
+        this.cache = new BoundedCache(cacheSizeInMB, cacheDurationInSecs);
         register(context);
     }
 
@@ -104,6 +93,96 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
         return cacheDurationInSecs;
     }
 
+    public static class BoundedCache {
+
+        public static class Entry implements Comparable<Entry> {
+            long lastAccessed;
+            JSONRecording recording;
+
+            @Override
+            public int compareTo(Entry o) {
+                return Long.compare(this.lastAccessed, o.lastAccessed);
+            }
+        }
+
+        private final Map<String, Entry> cache = new HashMap<>();
+
+        private final long maxSize;
+
+        private volatile long currentSize;
+
+        private final long cacheDurationInMillis;
+
+        public BoundedCache(final long maxSizeInMB, final long cacheDurationInSecs) {
+            this.maxSize = maxSizeInMB * 1024 * 1024;
+            this.cacheDurationInMillis = TimeUnit.SECONDS.toMillis(cacheDurationInSecs);
+        }
+
+        public synchronized JSONRecording get(final String requestId) {
+            checkCache();
+            final Entry entry = this.cache.get(requestId);
+            if (entry != null) {
+                entry.lastAccessed = System.currentTimeMillis();
+                cache.put(requestId, entry);
+                return entry.recording;
+            }
+            return null;
+        }
+
+        public synchronized void put(final String requestId, final JSONRecording recording) {
+            final Entry entry = new Entry();
+            entry.lastAccessed = System.currentTimeMillis();
+            entry.recording = recording;
+            cache.put(requestId, entry);
+            this.currentSize += recording.size();
+            checkCache();
+        }
+
+        private void checkCache() {
+            final Set<String> toRemove = new HashSet<>();
+            final ArrayList<Entry> list = new ArrayList<>(this.cache.values());
+            Collections.sort(list);
+            if ( this.currentSize > this.maxSize ) {
+                while (this.currentSize > this.maxSize && !list.isEmpty()) {
+                    final Entry entry = list.remove(list.size() - 1);
+                    toRemove.add(entry.recording.getRequestId());
+                    currentSize -= entry.recording.size();
+                }
+            }
+            final long time = System.currentTimeMillis() - this.cacheDurationInMillis;
+            for(final Entry entry : list) {
+                if ( entry.lastAccessed < time ) {
+                    toRemove.add(entry.recording.getRequestId());
+                    currentSize -= entry.recording.size();
+                }
+            }
+            for(final String key : toRemove) {
+                this.cache.remove(key);
+            }
+        }
+
+        public synchronized int size() {
+            return this.cache.size();
+        }
+
+        public synchronized long memorySize() {
+            return this.currentSize;
+        }
+
+        public synchronized void clear() {
+            this.cache.clear();
+            this.currentSize = 0;
+        }
+
+        public synchronized List<JSONRecording> asList() {
+            final List<JSONRecording> result = new ArrayList<>();
+            for(final Entry entry : this.cache.values()) {
+                result.add(entry.recording);
+            }
+            return result;
+        }
+    }
+
     //~-----------------------------------------------< WebConsole Plugin >
 
     @Override
@@ -118,7 +197,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
             try {
                 boolean responseDone = false;
                 if (requestId != null) {
-                    JSONRecording recording = cache.getIfPresent(requestId);
+                    JSONRecording recording = cache.get(requestId);
                     if (recording != null){
                         boolean shouldGZip = prepareForGZipResponse(request, response);
                         responseDone = recording.render(response.getOutputStream(), shouldGZip);
@@ -193,17 +272,13 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
     }
 
     private String memorySize() {
-        long size = 0;
-        for (JSONRecording r : cache.asMap().values()){
-            size += r.size();
-        }
-        return humanReadableByteCount(size);
+        return humanReadableByteCount(cache.memorySize());
     }
 
     private void renderRequests(PrintWriter pw) {
         if (cache.size() > 0){
             pw.println("<ol>");
-            List<JSONRecording> recordings = new ArrayList<JSONRecording>(cache.asMap().values());
+            List<JSONRecording> recordings = cache.asList();
             SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
             Collections.sort(recordings);
             for (JSONRecording r : recordings){
@@ -271,7 +346,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
     }
 
     Recording getRecording(String requestId) {
-        Recording recording = cache.getIfPresent(requestId);
+        Recording recording = cache.get(requestId);
         return recording == null ? Recording.NOOP : recording;
     }
 
@@ -304,6 +379,6 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
     }
 
     void resetCache(){
-        cache.invalidateAll();
+        cache.clear();
     }
 }
