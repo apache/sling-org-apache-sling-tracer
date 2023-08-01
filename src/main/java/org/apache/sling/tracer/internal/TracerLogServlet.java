@@ -144,7 +144,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
             Collections.sort(list);
             if ( this.currentSize > this.maxSize ) {
                 while (this.currentSize > this.maxSize && !list.isEmpty()) {
-                    final Entry entry = list.remove(list.size() - 1);
+                    final Entry entry = list.remove(0);
                     toRemove.add(entry.recording.getRequestId());
                     currentSize -= entry.recording.size();
                 }
@@ -162,10 +162,12 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
         }
 
         public synchronized int size() {
+            checkCache();
             return this.cache.size();
         }
 
         public synchronized long memorySize() {
+            checkCache();
             return this.currentSize;
         }
 
@@ -175,6 +177,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
         }
 
         public synchronized List<JSONRecording> asList() {
+            checkCache();
             final List<JSONRecording> result = new ArrayList<>();
             for(final Entry entry : this.cache.values()) {
                 result.add(entry.recording);
