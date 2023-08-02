@@ -43,7 +43,6 @@ import java.util.zip.GZIPOutputStream;
 import javax.servlet.http.HttpServletRequest;
 
 import ch.qos.logback.classic.Level;
-import com.google.common.primitives.Longs;
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.sling.api.request.RequestProgressTracker;
@@ -53,7 +52,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.sling.tracer.internal.Util.count;
 import static org.apache.sling.tracer.internal.Util.nullSafeString;
 import static org.apache.sling.tracer.internal.Util.nullSafeTrim;
@@ -235,7 +233,9 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         InputStream is = new ByteArrayInputStream(json);
 
         if (compressed) {
-            checkArgument(compress, "Cannot provide compressed response with compression disabled");
+            if (!compress) {
+                throw new IllegalArgumentException("Cannot provide compressed response with compression disabled");
+            }
             return is;
         }
 
@@ -247,7 +247,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
 
     @Override
     public int compareTo(@NotNull JSONRecording o) {
-        return Longs.compare(start, o.start);
+        return Long.compare(start, o.start);
     }
 
     private interface JsonEntry {

@@ -59,12 +59,10 @@ import org.slf4j.LoggerFactory;
 
 import static org.apache.sling.tracer.internal.TestUtil.createTracker;
 import static org.apache.sling.tracer.internal.TestUtil.getRequestId;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -260,17 +258,17 @@ public class LogTracerTest {
         assertNull(context.getService(TurboFilter.class));
 
         List<String> logs = logCollector.getLogs();
-        assertThat(logs, hasItem("a-info"));
-        assertThat(logs, not(hasItem("a-debug")));
+        assertTrue(logs.contains("a-info"));
+        assertFalse(logs.contains("a-debug"));
 
-        assertThat(logs, hasItem("a.b-info"));
-        assertThat(logs, hasItem("a.b-debug"));
-        assertThat(logs, not(hasItem("a.b-trace")));
+        assertTrue(logs.contains("a.b-info"));
+        assertTrue(logs.contains("a.b-debug"));
+        assertFalse(logs.contains("a.b-trace"));
 
-        assertThat(logs, hasItem("a.b.c-debug"));
-        assertThat(logs, hasItem("a.b.c-trace"));
-        assertThat(logs, hasItem("a.b.c-trace2"));
-        assertThat(logs, hasItem("a.b.c.d-trace"));
+        assertTrue(logs.contains("a.b.c-debug"));
+        assertTrue(logs.contains("a.b.c-trace"));
+        assertTrue(logs.contains("a.b.c-trace2"));
+        assertTrue(logs.contains("a.b.c.d-trace"));
 
         rootLogger().setLevel(oldLevel);
     }

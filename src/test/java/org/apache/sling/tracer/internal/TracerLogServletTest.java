@@ -46,11 +46,10 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import static org.apache.sling.tracer.internal.TestUtil.createTracker;
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -164,7 +163,7 @@ public class TracerLogServletTest {
         when(response.getWriter()).thenReturn(new PrintWriter(sw));
         logServlet.renderContent(request, response);
 
-        assertThat(sw.toString(), containsString("Log Tracer"));
+        assertTrue(sw.toString().contains("Log Tracer"));
     }
 
     private static class ByteArrayServletOutputStream extends ServletOutputStream {
