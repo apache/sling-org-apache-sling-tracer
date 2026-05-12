@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.tracer.internal;
 
 import java.util.List;
@@ -31,13 +30,13 @@ public class CallerStackReporterTest {
     @Test
     public void startAndStop() throws Exception {
         StackTraceElement[] s = asStack("0", "1", "2", "3", "4", "5");
-        assertArrayEquals(new String[]{"0", "1", "2", "3"}, arr(new CallerStackReporter(4).report(s)));
-        assertArrayEquals(new String[]{"0"}, arr(new CallerStackReporter(1).report(s)));
-        assertArrayEquals(new String[]{"2", "3"}, arr(new CallerStackReporter(2, 4, CallerFilter.ALL).report(s)));
+        assertArrayEquals(new String[] {"0", "1", "2", "3"}, arr(new CallerStackReporter(4).report(s)));
+        assertArrayEquals(new String[] {"0"}, arr(new CallerStackReporter(1).report(s)));
+        assertArrayEquals(new String[] {"2", "3"}, arr(new CallerStackReporter(2, 4, CallerFilter.ALL).report(s)));
     }
 
     @Test
-    public void filter() throws Exception{
+    public void filter() throws Exception {
         StackTraceElement[] s = asStack("0", "1", "2", "3", "4", "5");
         CallerFilter f = new CallerFilter() {
             @Override
@@ -47,18 +46,18 @@ public class CallerStackReporterTest {
             }
         };
 
-        assertArrayEquals(new String[]{"1", "2"}, arr(new CallerStackReporter(0, 4, f).report(s)));
+        assertArrayEquals(new String[] {"1", "2"}, arr(new CallerStackReporter(0, 4, f).report(s)));
     }
 
     @Test
-    public void prefixFilter() throws Exception{
+    public void prefixFilter() throws Exception {
         StackTraceElement[] s = asStack("a.b.c", "a.b.d", "f.g.h", "m.g.i", "4", "5");
-        assertArrayEquals(new String[]{"a.b.c", "a.b.d", "f.g.h", "m.g.i"},
+        assertArrayEquals(
+                new String[] {"a.b.c", "a.b.d", "f.g.h", "m.g.i"},
                 arr(new CallerStackReporter(0, 4, CallerFilter.ALL).report(s)));
 
         CallerFilter f = PrefixExcludeFilter.from("a.b|f.g");
-        assertArrayEquals(new String[]{"m.g.i"},
-                arr(new CallerStackReporter(0, 4, f).report(s)));
+        assertArrayEquals(new String[] {"m.g.i"}, arr(new CallerStackReporter(0, 4, f).report(s)));
     }
 
     private static String[] arr(List<StackTraceElement> list) {
@@ -68,5 +67,4 @@ public class CallerStackReporterTest {
         }
         return result;
     }
-
 }

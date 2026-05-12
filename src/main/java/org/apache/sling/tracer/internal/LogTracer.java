@@ -18,6 +18,15 @@
  */
 package org.apache.sling.tracer.internal;
 
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -28,15 +37,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -86,8 +86,6 @@ public class LogTracer {
 
     public static final String HEADER_TRACER = "Sling-Tracers";
 
-
-
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(LogTracer.class);
 
     private final Map<String, TracerSet> tracers = new HashMap<String, TracerSet>();
@@ -98,8 +96,7 @@ public class LogTracer {
 
     private ServiceRegistration filterRegistration;
 
-    private final AtomicReference<ServiceRegistration> logCollectorReg
-            = new AtomicReference<ServiceRegistration>();
+    private final AtomicReference<ServiceRegistration> logCollectorReg = new AtomicReference<ServiceRegistration>();
 
     private final AtomicInteger logCollectorRegCount = new AtomicInteger();
 
@@ -125,10 +122,15 @@ public class LogTracer {
                 boolean compressionEnabled = config.recordingCompressionEnabled();
                 boolean gzipResponse = config.gzipResponse();
 
-                this.logServlet = new TracerLogServlet(context, cacheSize, cacheDuration, compressionEnabled, gzipResponse);
+                this.logServlet =
+                        new TracerLogServlet(context, cacheSize, cacheDuration, compressionEnabled, gzipResponse);
                 recorder = logServlet;
-                LOG.info("Tracer recoding enabled with cacheSize {} MB, expiry {} secs, compression {}, gzip response {}",
-                        cacheSize, cacheDuration, compressionEnabled, gzipResponse);
+                LOG.info(
+                        "Tracer recoding enabled with cacheSize {} MB, expiry {} secs, compression {}, gzip response {}",
+                        cacheSize,
+                        cacheDuration,
+                        compressionEnabled,
+                        gzipResponse);
             }
             LOG.info("Log tracer enabled. Required filters registered. Tracer servlet enabled {}", servletEnabled);
         }
@@ -159,7 +161,7 @@ public class LogTracer {
     }
 
     TracerContext getTracerContext(String tracerSetNames, String tracerConfig, Recording recording) {
-        //No config or tracer set name provided. So tracing not required
+        // No config or tracer set name provided. So tracing not required
         tracerConfig = trimToNull(tracerConfig);
         tracerSetNames = trimToNull(tracerSetNames);
 
@@ -204,19 +206,19 @@ public class LogTracer {
         Dictionary<String, Object> slingFilterProps = new Hashtable<String, Object>();
         slingFilterProps.put("sling.filter.scope", "REQUEST");
         slingFilterProps.put(Constants.SERVICE_DESCRIPTION, "Sling Filter required for Log Tracer");
-        slingFilterRegistration = context.registerService(Filter.class.getName(),
-                new SlingTracerFilter(), slingFilterProps);
+        slingFilterRegistration =
+                context.registerService(Filter.class.getName(), new SlingTracerFilter(), slingFilterProps);
 
         Dictionary<String, Object> filterProps = new Hashtable<String, Object>();
         filterProps.put("pattern", "/.*");
 
         filterProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/");
-        filterProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+        filterProps.put(
+                HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
                 "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)");
 
         filterProps.put(Constants.SERVICE_DESCRIPTION, "Servlet Filter required for Log Tracer");
-        filterRegistration = context.registerService(Filter.class.getName(),
-                new TracerFilter(), filterProps);
+        filterRegistration = context.registerService(Filter.class.getName(), new TracerFilter(), filterProps);
     }
 
     /**
@@ -232,8 +234,8 @@ public class LogTracer {
         synchronized (logCollectorRegCount) {
             int count = logCollectorRegCount.getAndIncrement();
             if (count == 0) {
-                ServiceRegistration reg = bundleContext.registerService(TurboFilter.class.getName(),
-                        new LogCollector(), null);
+                ServiceRegistration reg =
+                        bundleContext.registerService(TurboFilter.class.getName(), new LogCollector(), null);
                 logCollectorReg.set(reg);
             }
         }
@@ -251,13 +253,10 @@ public class LogTracer {
 
     private abstract class AbstractFilter implements Filter {
         @Override
-        public void init(FilterConfig filterConfig) throws ServletException {
-        }
+        public void init(FilterConfig filterConfig) throws ServletException {}
 
         @Override
-        public void destroy() {
-
-        }
+        public void destroy() {}
 
         protected void enableCollector(TracerContext tracerContext) {
             requestContextHolder.set(tracerContext);
@@ -277,21 +276,21 @@ public class LogTracer {
     private class TracerFilter extends AbstractFilter {
 
         @Override
-        public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
-                             FilterChain filterChain) throws IOException, ServletException {
+        public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+                throws IOException, ServletException {
 
-            //At generic filter level we just check for tracer hint via Header (later Cookie)
-            //and not touch the request parameter to avoid eager initialization of request
-            //parameter map
+            // At generic filter level we just check for tracer hint via Header (later Cookie)
+            // and not touch the request parameter to avoid eager initialization of request
+            // parameter map
 
             HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
 
-            //Invoke at start so that header can be set. If done at end there is a chance
-            //that response is committed
+            // Invoke at start so that header can be set. If done at end there is a chance
+            // that response is committed
             Recording recording = recorder.startRecording(httpRequest, (HttpServletResponse) servletResponse);
 
-            TracerContext tracerContext = getTracerContext(httpRequest.getHeader(HEADER_TRACER),
-                    httpRequest.getHeader(HEADER_TRACER_CONFIG), recording);
+            TracerContext tracerContext = getTracerContext(
+                    httpRequest.getHeader(HEADER_TRACER), httpRequest.getHeader(HEADER_TRACER_CONFIG), recording);
             try {
                 if (tracerContext != null) {
                     enableCollector(tracerContext);
@@ -304,8 +303,6 @@ public class LogTracer {
                 recorder.endRecording(httpRequest, recording);
             }
         }
-
-
     }
 
     /**
@@ -314,19 +311,21 @@ public class LogTracer {
      */
     private class SlingTracerFilter extends AbstractFilter {
         @Override
-        public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
-                             FilterChain filterChain) throws IOException, ServletException {
+        public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+                throws IOException, ServletException {
             SlingHttpServletRequest slingRequest = (SlingHttpServletRequest) servletRequest;
             TracerContext tracerContext = requestContextHolder.get();
             Recording recording = recorder.getRecordingForRequest(slingRequest);
             recording.registerTracker(slingRequest.getRequestProgressTracker());
             boolean createdContext = false;
 
-            //Check if the global filter created context based on HTTP headers. If not
-            //then check from request params
+            // Check if the global filter created context based on HTTP headers. If not
+            // then check from request params
             if (tracerContext == null) {
-                tracerContext = getTracerContext(slingRequest.getParameter(PARAM_TRACER),
-                        slingRequest.getParameter(PARAM_TRACER_CONFIG), recording);
+                tracerContext = getTracerContext(
+                        slingRequest.getParameter(PARAM_TRACER),
+                        slingRequest.getParameter(PARAM_TRACER_CONFIG),
+                        recording);
                 if (tracerContext != null) {
                     createdContext = true;
                 }
@@ -336,7 +335,7 @@ public class LogTracer {
                 if (tracerContext != null) {
                     tracerContext.registerProgressTracker(slingRequest.getRequestProgressTracker());
 
-                    //if context created in this filter then enable the collector
+                    // if context created in this filter then enable the collector
                     if (createdContext) {
                         enableCollector(tracerContext);
                     }
@@ -356,8 +355,8 @@ public class LogTracer {
 
     private static class LogCollector extends TurboFilter {
         @Override
-        public FilterReply decide(Marker marker, Logger logger, Level level,
-                                  String format, Object[] params, Throwable t) {
+        public FilterReply decide(
+                Marker marker, Logger logger, Level level, String format, Object[] params, Throwable t) {
             TracerContext tracer = requestContextHolder.get();
             if (tracer == null) {
                 return FilterReply.NEUTRAL;
@@ -378,5 +377,4 @@ public class LogTracer {
             return FilterReply.NEUTRAL;
         }
     }
-
 }

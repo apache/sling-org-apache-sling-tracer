@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.tracer.internal;
 
 import java.util.ArrayList;
@@ -37,8 +36,8 @@ class TracerSet {
     public TracerSet(String config) {
         int indexOfColon = config.indexOf(':');
         if (indexOfColon == -1) {
-            throw new IllegalArgumentException("Invalid tracer config format. TracerSet " +
-                    "name cannot be determined " + config);
+            throw new IllegalArgumentException(
+                    "Invalid tracer config format. TracerSet " + "name cannot be determined " + config);
         }
 
         name = config.substring(0, indexOfColon).toLowerCase().trim();
@@ -73,7 +72,7 @@ class TracerSet {
         for (ManifestHeader.Entry e : parsedConfig.getEntries()) {
             String category = e.getValue();
 
-            //Defaults to Debug
+            // Defaults to Debug
             Level level = Level.valueOf(e.getAttributeValue(LEVEL));
             CallerStackReporter reporter = createReporter(e);
             result.add(new TracerConfig(category, level, reporter));
@@ -83,24 +82,24 @@ class TracerSet {
 
     static CallerStackReporter createReporter(ManifestHeader.Entry e) {
         String caller = e.getAttributeValue(CALLER);
-        if (caller == null){
+        if (caller == null) {
             return null;
         }
 
-        if ("true".equals(caller)){
+        if ("true".equals(caller)) {
             return new CallerStackReporter(0, Integer.MAX_VALUE, CallerFilter.ALL);
         }
 
         CallerFilter filter = CallerFilter.ALL;
         int depth;
-        try{
+        try {
             depth = Integer.parseInt(caller);
-        } catch (NumberFormatException ignore){
+        } catch (NumberFormatException ignore) {
             return null;
         }
 
         String filterValue = e.getAttributeValue(CALLER_PREFIX_FILTER);
-        if (filterValue != null){
+        if (filterValue != null) {
             filter = PrefixExcludeFilter.from(filterValue);
         }
 

@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.tracer.internal;
 
 import org.junit.Test;
@@ -26,7 +25,7 @@ import static org.junit.Assert.*;
 public class UtilTest {
 
     @Test
-    public void trimToNull() throws Exception{
+    public void trimToNull() throws Exception {
         assertEquals(null, Util.trimToNull(null));
         assertEquals(null, Util.trimToNull(""));
         assertEquals("foo", Util.trimToNull("foo"));
@@ -34,23 +33,22 @@ public class UtilTest {
     }
 
     @Test
-    public void nullSafeString() throws Exception{
+    public void nullSafeString() throws Exception {
         assertEquals(null, Util.nullSafeString(null));
         assertEquals("foo", Util.nullSafeString("foo"));
         assertEquals("1", Util.nullSafeString(1));
     }
 
     @Test
-    public void nullSafeTrim() throws Exception{
+    public void nullSafeTrim() throws Exception {
         assertEquals("", Util.nullSafeTrim(null));
         assertEquals("foo", Util.nullSafeTrim(" foo"));
     }
 
     @Test
-    public void count() throws Exception{
+    public void count() throws Exception {
         assertEquals(2, Util.count("she sell sea shells on the sea shore", "sea"));
         assertEquals(1, Util.count("she sell sea shells on the sea shore", "shore"));
         assertEquals(0, Util.count("she sell sea shells on the sea shore", "tiger"));
     }
-
 }

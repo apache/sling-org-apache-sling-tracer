@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
@@ -19,154 +19,152 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
+    <modelVersion>4.0.0</modelVersion>
 
-  <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling-bundle-parent</artifactId>
+        <version>66</version>
+    </parent>
 
-  <parent>
-    <groupId>org.apache.sling</groupId>
-    <artifactId>sling-bundle-parent</artifactId>
-    <version>47</version>
-  </parent>
+    <artifactId>org.apache.sling.tracer</artifactId>
+    <version>1.0.9-SNAPSHOT</version>
 
-  <artifactId>org.apache.sling.tracer</artifactId>
-  <version>1.0.9-SNAPSHOT</version>
-
-  <name>Apache Sling Log Tracer</name>
-  <description>
-    Tracer provides support for enabling the logs for specific category at specific level and
+    <name>Apache Sling Log Tracer</name>
+    <description>Tracer provides support for enabling the logs for specific category at specific level and
     only for specific request. It provides a very fine level of control via config provided
     as part of HTTP request around how the logging should be performed for given category.
 
-    Refer to http://sling.apache.org/documentation/bundles/log-tracers.html
-  </description>
+    Refer to http://sling.apache.org/documentation/bundles/log-tracers.html</description>
 
-  <scm>
-    <connection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-tracer.git</connection>
-    <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-tracer.git</developerConnection>
-    <url>https://github.com/apache/sling-org-apache-sling-tracer.git</url>
-    <tag>HEAD</tag>
-  </scm>
+    <scm>
+        <connection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-tracer.git</connection>
+        <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-tracer.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/apache/sling-org-apache-sling-tracer.git</url>
+    </scm>
 
-  <properties>
-    <project.build.outputTimestamp>1691038226</project.build.outputTimestamp>
-  </properties>
+    <properties>
+        <sling.java.version>11</sling.java.version>
+        <project.build.outputTimestamp>1691038226</project.build.outputTimestamp>
+    </properties>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>biz.aQute.bnd</groupId>
-        <artifactId>bnd-maven-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
-
-  <dependencies>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.7.32</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>1.2.10</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>osgi.core</artifactId>
-      <version>7.0.0</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.service.component.annotations</artifactId>
-      <version>1.4.0</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.service.metatype.annotations</artifactId>
-      <version>1.4.0</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.commons.osgi</artifactId>
-      <version>2.4.2</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.api</artifactId>
-      <version>2.27.2</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>org.apache.felix.utils</artifactId>
-        <version>1.11.8</version>
-        <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.webconsole</artifactId>
-      <version>4.2.0</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>2.13.0</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jetbrains</groupId>
-      <artifactId>annotations</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.service.http.whiteboard</artifactId>
-      <version>1.0.0</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.13.2</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.testing.osgi-mock.junit4</artifactId>
-      <version>3.3.8</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.testing.sling-mock.junit4</artifactId>
-      <version>3.4.10</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>5.4.0</version>
-      <scope>test</scope>
-    </dependency>
+    <dependencies>
         <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.commons.johnzon</artifactId>
-      <version>1.2.16</version>
-      <scope>test</scope>
-    </dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.32</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.10</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.framework</artifactId>
+            <version>1.10.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.component.annotations</artifactId>
+            <version>1.4.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.metatype.annotations</artifactId>
+            <version>1.4.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.osgi</artifactId>
+            <version>2.4.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.api</artifactId>
+            <version>2.27.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.utils</artifactId>
+            <version>1.11.8</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.webconsole</artifactId>
+            <version>4.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.13.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.http.whiteboard</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.osgi-mock.junit4</artifactId>
+            <version>3.3.8</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.sling-mock.junit4</artifactId>
+            <version>3.4.10</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.4.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.johnzon</artifactId>
+            <version>1.2.16</version>
+            <scope>test</scope>
+        </dependency>
 
-  </dependencies>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>biz.aQute.bnd</groupId>
+                <artifactId>bnd-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>

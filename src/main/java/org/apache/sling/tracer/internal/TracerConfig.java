@@ -16,12 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.tracer.internal;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.core.CoreConstants;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,7 +44,7 @@ class TracerConfig implements Comparable<TracerConfig> {
         this(loggerName, level, null);
     }
 
-    public TracerConfig(String loggerName, Level level,@Nullable CallerStackReporter reporter) {
+    public TracerConfig(String loggerName, Level level, @Nullable CallerStackReporter reporter) {
         this.loggerName = loggerName;
         this.level = level;
         this.depth = getDepth(loggerName);
@@ -88,7 +86,7 @@ class TracerConfig implements Comparable<TracerConfig> {
         return level;
     }
 
-    public boolean isReportCallerStack(){
+    public boolean isReportCallerStack() {
         return callerReporter != null;
     }
 

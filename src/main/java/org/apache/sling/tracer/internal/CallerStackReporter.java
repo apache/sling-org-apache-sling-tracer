@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.tracer.internal;
 
 import java.util.ArrayList;
@@ -34,35 +33,34 @@ class CallerStackReporter {
             "org.apache.sling.tracer.internal",
             "ch.qos.logback.classic",
             "sun.reflect",
-            "java.lang.reflect"
-    ));
+            "java.lang.reflect"));
+
     private final CallerFilter callerFilter;
     private final int start;
     private final int depth;
 
-    public CallerStackReporter(int depth){
+    public CallerStackReporter(int depth) {
         this(0, depth, CallerFilter.ALL);
     }
 
-    public CallerStackReporter(int start, int depth, CallerFilter filter){
+    public CallerStackReporter(int start, int depth, CallerFilter filter) {
         this.start = start;
         this.depth = depth;
         this.callerFilter = filter;
     }
 
-    public List<StackTraceElement> report(){
+    public List<StackTraceElement> report() {
         return report(Thread.currentThread().getStackTrace());
     }
 
-    public List<StackTraceElement> report(StackTraceElement[] stack){
+    public List<StackTraceElement> report(StackTraceElement[] stack) {
         List<StackTraceElement> filteredStack = fwkExcludedStack(stack);
         List<StackTraceElement> result = new ArrayList<StackTraceElement>(filteredStack.size());
 
-        //Iterate over the filtered stack with limits applicable on that not on actual stack
+        // Iterate over the filtered stack with limits applicable on that not on actual stack
         for (int i = 0; i < filteredStack.size(); i++) {
             StackTraceElement ste = filteredStack.get(i);
-            if (i >=  start && i < depth
-                    && callerFilter.include(ste)){
+            if (i >= start && i < depth && callerFilter.include(ste)) {
                 result.add(ste);
             }
         }
@@ -72,7 +70,7 @@ class CallerStackReporter {
     private List<StackTraceElement> fwkExcludedStack(StackTraceElement[] stack) {
         List<StackTraceElement> filteredStack = new ArrayList<StackTraceElement>(stack.length);
         for (StackTraceElement ste : stack) {
-            if (FWK_EXCLUDE_FILTER.include(ste)){
+            if (FWK_EXCLUDE_FILTER.include(ste)) {
                 filteredStack.add(ste);
             }
         }

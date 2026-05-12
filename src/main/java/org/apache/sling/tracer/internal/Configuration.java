@@ -16,36 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.tracer.internal;
 
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
-@ObjectClassDefinition(name = "Apache Sling Log Tracer",
-        description =  "Provides support for enabling log for specific loggers on per request basis. " +
-                "Refer to http://sling.apache.org/documentation/bundles/log-tracers.html for " +
-                "more details")
+@ObjectClassDefinition(
+        name = "Apache Sling Log Tracer",
+        description = "Provides support for enabling log for specific loggers on per request basis. "
+                + "Refer to http://sling.apache.org/documentation/bundles/log-tracers.html for "
+                + "more details")
 public @interface Configuration {
 
     @AttributeDefinition(
             name = "Tracer Sets",
-            description = "Default list of tracer sets configured. Tracer Set config confirms " +
-                    "to following format. <set name> : <logger name>;level=<level name>, other loggers")
+            description = "Default list of tracer sets configured. Tracer Set config confirms "
+                    + "to following format. <set name> : <logger name>;level=<level name>, other loggers")
     String[] tracerSets() default {
-            "oak-query : org.apache.jackrabbit.oak.query.QueryEngineImpl;level=debug",
-            "oak-writes : org.apache.jackrabbit.oak.jcr.operations.writes;level=trace"
+        "oak-query : org.apache.jackrabbit.oak.query.QueryEngineImpl;level=debug",
+        "oak-writes : org.apache.jackrabbit.oak.jcr.operations.writes;level=trace"
     };
 
-    @AttributeDefinition(
-            name = "Enabled",
-            description = "Enable the Tracer")
+    @AttributeDefinition(name = "Enabled", description = "Enable the Tracer")
     boolean enabled();
 
     @AttributeDefinition(
             name = "Recording Servlet Enabled",
-            description = "Enable the Tracer Servlet. This servlet is required for the tracer recording feature " +
-                    "to work and provides access to the json dump of the recording performed")
+            description = "Enable the Tracer Servlet. This servlet is required for the tracer recording feature "
+                    + "to work and provides access to the json dump of the recording performed")
     boolean servletEnabled();
 
     @AttributeDefinition(
@@ -58,14 +56,9 @@ public @interface Configuration {
             description = "Time in seconds upto which the recording data would be held in memory before expiry")
     long recordingCacheDurationInSecs() default 60 * 15;
 
-    @AttributeDefinition(
-            name = "Compress Recording",
-            description = "Enable compression for recoding held in memory")
+    @AttributeDefinition(name = "Compress Recording", description = "Enable compression for recoding held in memory")
     boolean recordingCompressionEnabled() default true;
 
-    @AttributeDefinition(
-            name = "GZip Response",
-            description = "If enabled the response sent would be compressed")
+    @AttributeDefinition(name = "GZip Response", description = "If enabled the response sent would be compressed")
     boolean gzipResponse() default true;
-
 }

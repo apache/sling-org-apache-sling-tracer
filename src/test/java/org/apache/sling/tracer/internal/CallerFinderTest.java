@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.tracer.internal;
 
 import org.junit.Test;
@@ -28,16 +27,9 @@ import static org.junit.Assert.assertNull;
 public class CallerFinderTest {
 
     @Test
-    public void determineCallerSingle() throws Exception{
+    public void determineCallerSingle() throws Exception {
         CallerFinder cf = new CallerFinder(new String[] {"o.a.s", "o.a.j.o"});
-        StackTraceElement[] stack = asStack(
-                "o.a.j.o.a",
-                "o.a.j.o.b",
-                "c.a.g.w",
-                "o.e.j",
-                "o.e.j",
-                "o.e.j"
-        );
+        StackTraceElement[] stack = asStack("o.a.j.o.a", "o.a.j.o.b", "c.a.g.w", "o.e.j", "o.e.j", "o.e.j");
 
         StackTraceElement caller = cf.determineCaller(stack);
         assertNotNull(caller);
@@ -45,66 +37,40 @@ public class CallerFinderTest {
     }
 
     @Test
-    public void determineCallerMultipleApi() throws Exception{
+    public void determineCallerMultipleApi() throws Exception {
         CallerFinder cf = new CallerFinder(new String[] {"o.a.s", "o.a.j.o"});
-        StackTraceElement[] stack = asStack(
-                "o.a.j.o.a",
-                "o.a.j.o.b",
-                "o.a.s.a",
-                "o.a.s.b",
-                "c.a.g.w",
-                "o.e.j",
-                "o.e.j",
-                "o.e.j"
-        );
+        StackTraceElement[] stack =
+                asStack("o.a.j.o.a", "o.a.j.o.b", "o.a.s.a", "o.a.s.b", "c.a.g.w", "o.e.j", "o.e.j", "o.e.j");
 
         StackTraceElement caller = cf.determineCaller(stack);
         assertNotNull(caller);
         assertEquals("c.a.g.w", caller.getClassName());
 
-        stack = asStack(
-                "o.a.j.o.a",
-                "o.a.j.o.b",
-                "o.a.s.a",
-                "o.a.s.b",
-                "c.a.g.w",
-                "o.e.j",
-                "o.e.j",
-                "o.e.j"
-        );
+        stack = asStack("o.a.j.o.a", "o.a.j.o.b", "o.a.s.a", "o.a.s.b", "c.a.g.w", "o.e.j", "o.e.j", "o.e.j");
 
         cf = new CallerFinder(new String[] {"o.a.j.o"});
         caller = cf.determineCaller(stack);
         assertNotNull(caller);
         assertEquals("o.a.s.a", caller.getClassName());
-
     }
 
     @Test
-    public void nullInput() throws Exception{
+    public void nullInput() throws Exception {
         CallerFinder cf = new CallerFinder(new String[] {"o.a.s", "o.a.j.o"});
         assertNull(cf.determineCaller(null));
     }
 
     @Test
-    public void nullCaller() throws Exception{
+    public void nullCaller() throws Exception {
         CallerFinder cf = new CallerFinder(new String[] {"o.a1.s", "o.a1.j.o"});
-        StackTraceElement[] stack = asStack(
-                "o.a.j.o.a",
-                "o.a.j.o.b",
-                "o.a.s.a",
-                "o.a.s.b",
-                "c.a.g.w",
-                "o.e.j",
-                "o.e.j",
-                "o.e.j"
-        );
+        StackTraceElement[] stack =
+                asStack("o.a.j.o.a", "o.a.j.o.b", "o.a.s.a", "o.a.s.b", "c.a.g.w", "o.e.j", "o.e.j", "o.e.j");
 
         StackTraceElement caller = cf.determineCaller(stack);
         assertNull(caller);
     }
 
-    static StackTraceElement[] asStack(String ... stack){
+    static StackTraceElement[] asStack(String... stack) {
         StackTraceElement[] result = new StackTraceElement[stack.length];
         for (int i = 0; i < stack.length; i++) {
             result[i] = new StackTraceElement(stack[i], "foo", null, 0);

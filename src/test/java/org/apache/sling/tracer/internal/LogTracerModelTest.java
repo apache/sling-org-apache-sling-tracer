@@ -44,7 +44,6 @@ public class LogTracerModelTest {
 
         assertNotNull("Config for parent should match for child", a.getConfig("com.foo.bar"));
 
-
         TracerConfig tcbar = a.getConfig("com.bar");
         assertNotNull(tcbar);
         assertEquals(Level.INFO, tcbar.getLevel());
@@ -71,21 +70,20 @@ public class LogTracerModelTest {
 
     @Test
     public void tracerConfigSort() throws Exception {
-        TracerConfig[] configs = new TracerConfig[]{
-                new TracerConfig("a.b.c.d", Level.DEBUG),
-                new TracerConfig("a", Level.DEBUG),
-                new TracerConfig("a.b.e", Level.DEBUG),
+        TracerConfig[] configs = new TracerConfig[] {
+            new TracerConfig("a.b.c.d", Level.DEBUG),
+            new TracerConfig("a", Level.DEBUG),
+            new TracerConfig("a.b.e", Level.DEBUG),
         };
 
         Arrays.sort(configs);
         assertEquals("a.b.c.d", configs[0].getLoggerName());
         assertEquals("a.b.e", configs[1].getLoggerName());
         assertEquals("a", configs[2].getLoggerName());
-
     }
 
     private static TracerContext getContext(TracerSet ts) {
-        return new TracerContext(ts.getConfigs().toArray(new TracerConfig[ts.getConfigs().size()]), Recording.NOOP);
+        return new TracerContext(
+                ts.getConfigs().toArray(new TracerConfig[ts.getConfigs().size()]), Recording.NOOP);
     }
-
 }

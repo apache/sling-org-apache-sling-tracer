@@ -23,14 +23,15 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 public class BoundedCacheTest {
-  
-    @Test public void testMemoryBoundary() {
+
+    @Test
+    public void testMemoryBoundary() {
         final TracerLogServlet.BoundedCache cache = new TracerLogServlet.BoundedCache(2, 10);
         JSONRecording recordingA = Mockito.mock(JSONRecording.class);
-        Mockito.when(recordingA.size()).thenReturn(1*1024*1024);
+        Mockito.when(recordingA.size()).thenReturn(1 * 1024 * 1024);
         Mockito.when(recordingA.getRequestId()).thenReturn("a");
         JSONRecording recordingB = Mockito.mock(JSONRecording.class);
-        Mockito.when(recordingB.size()).thenReturn(1*1000*1000);
+        Mockito.when(recordingB.size()).thenReturn(1 * 1000 * 1000);
         Mockito.when(recordingB.getRequestId()).thenReturn("b");
 
         cache.put("a", recordingA);
@@ -41,7 +42,7 @@ public class BoundedCacheTest {
         Assert.assertNotNull(cache.get("b"));
 
         JSONRecording recordingC = Mockito.mock(JSONRecording.class);
-        Mockito.when(recordingC.size()).thenReturn(1*1024*1024);
+        Mockito.when(recordingC.size()).thenReturn(1 * 1024 * 1024);
         Mockito.when(recordingC.getRequestId()).thenReturn("c");
         cache.put("c", recordingC);
 
@@ -51,13 +52,14 @@ public class BoundedCacheTest {
         Assert.assertEquals(recordingB.size() + recordingC.size(), cache.memorySize());
     }
 
-    @Test public void testTimeBoundary() throws InterruptedException {
+    @Test
+    public void testTimeBoundary() throws InterruptedException {
         final TracerLogServlet.BoundedCache cache = new TracerLogServlet.BoundedCache(2, 1);
         JSONRecording recordingA = Mockito.mock(JSONRecording.class);
-        Mockito.when(recordingA.size()).thenReturn(1*1024*1024);
+        Mockito.when(recordingA.size()).thenReturn(1 * 1024 * 1024);
         Mockito.when(recordingA.getRequestId()).thenReturn("a");
         JSONRecording recordingB = Mockito.mock(JSONRecording.class);
-        Mockito.when(recordingB.size()).thenReturn(1*1000*1000);
+        Mockito.when(recordingB.size()).thenReturn(1 * 1000 * 1000);
         Mockito.when(recordingB.getRequestId()).thenReturn("b");
 
         cache.put("a", recordingA);

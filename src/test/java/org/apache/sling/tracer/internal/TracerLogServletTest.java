@@ -16,8 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.tracer.internal;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,13 +32,6 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.zip.GZIPInputStream;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.WriteListener;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
@@ -58,106 +57,114 @@ public class TracerLogServletTest {
 
     @Rule
     public final OsgiContext context = new OsgiContext();
+
     @Rule
     public final MockitoRule mockito = MockitoJUnit.rule();
 
     @Mock
     private HttpServletRequest request;
+
     @Mock
     private HttpServletResponse response;
 
     @Test
-    public void noRecordingByDefault() throws Exception{
+    public void noRecordingByDefault() throws Exception {
         TracerLogServlet logServlet = newLogServlet();
         assertSame(Recording.NOOP, logServlet.startRecording(request, response));
         assertSame(Recording.NOOP, logServlet.getRecordingForRequest(request));
     }
 
     @Test
-    public void recordingWhenRequested() throws Exception{
+    public void recordingWhenRequested() throws Exception {
         TracerLogServlet logServlet = newLogServlet();
         request = new MockSlingHttpServletRequest(context.bundleContext());
 
         Recording recording = logServlet.startRecording(request, response);
         assertNotNull(recording);
 
-        //Once recording is created then it should be returned
+        // Once recording is created then it should be returned
         Recording recording2 = logServlet.getRecordingForRequest(request);
         assertSame(recording, recording2);
 
-        //Repeated call should return same recording instance
+        // Repeated call should return same recording instance
         Recording recording3 = logServlet.startRecording(request, response);
         assertSame(recording, recording3);
 
         logServlet.resetCache();
 
-        //If recording gets lost then NOOP must be returned
+        // If recording gets lost then NOOP must be returned
         Recording recording4 = logServlet.getRecordingForRequest(request);
         assertSame(Recording.NOOP, recording4);
     }
 
     @Test
-    public void jsonRendering() throws Exception{
+    public void jsonRendering() throws Exception {
         TracerLogServlet logServlet = newLogServlet();
         when(request.getMethod()).thenReturn("GET");
         when(request.getHeader(TracerLogServlet.HEADER_TRACER_RECORDING)).thenReturn("true");
 
         Recording recording = logServlet.startRecording(request, response);
-        recording.registerTracker(createTracker("x" ,"y"));
+        recording.registerTracker(createTracker("x", "y"));
         logServlet.endRecording(request, recording);
 
         ArgumentCaptor<String> requestIdCaptor = ArgumentCaptor.forClass(String.class);
         verify(response).setHeader(eq(TracerLogServlet.HEADER_TRACER_REQUEST_ID), requestIdCaptor.capture());
-        verify(response).setHeader(TracerLogServlet.HEADER_TRACER_PROTOCOL_VERSION,
-                String.valueOf(TracerLogServlet.TRACER_PROTOCOL_VERSION));
+        verify(response)
+                .setHeader(
+                        TracerLogServlet.HEADER_TRACER_PROTOCOL_VERSION,
+                        String.valueOf(TracerLogServlet.TRACER_PROTOCOL_VERSION));
 
         ByteArrayServletOutputStream sos = new ByteArrayServletOutputStream();
         when(response.getOutputStream()).thenReturn(sos);
-        when(request.getRequestURI()).thenReturn("/system/console/" + requestIdCaptor.getValue() + ".json" );
+        when(request.getRequestURI()).thenReturn("/system/console/" + requestIdCaptor.getValue() + ".json");
 
         logServlet.renderContent(request, response);
-        JsonObject json = Json.createReader(new StringReader(sos.baos.toString("UTF-8"))).readObject();
+        JsonObject json =
+                Json.createReader(new StringReader(sos.baos.toString("UTF-8"))).readObject();
         assertEquals("GET", json.getString("method"));
         assertEquals(2, json.getJsonArray("requestProgressLogs").size());
     }
 
     @Test
-    public void gzipResponse() throws Exception{
+    public void gzipResponse() throws Exception {
         TracerLogServlet logServlet = newLogServlet();
         when(request.getMethod()).thenReturn("GET");
         when(request.getHeader(TracerLogServlet.HEADER_TRACER_RECORDING)).thenReturn("true");
         when(request.getHeader("Accept-Encoding")).thenReturn("gzip, deflate");
 
         Recording recording = logServlet.startRecording(request, response);
-        recording.registerTracker(createTracker("x" ,"y"));
+        recording.registerTracker(createTracker("x", "y"));
         logServlet.endRecording(request, recording);
 
         ArgumentCaptor<String> requestIdCaptor = ArgumentCaptor.forClass(String.class);
         verify(response).setHeader(eq(TracerLogServlet.HEADER_TRACER_REQUEST_ID), requestIdCaptor.capture());
-        verify(response).setHeader(TracerLogServlet.HEADER_TRACER_PROTOCOL_VERSION,
-                String.valueOf(TracerLogServlet.TRACER_PROTOCOL_VERSION));
+        verify(response)
+                .setHeader(
+                        TracerLogServlet.HEADER_TRACER_PROTOCOL_VERSION,
+                        String.valueOf(TracerLogServlet.TRACER_PROTOCOL_VERSION));
 
         ByteArrayServletOutputStream sos = new ByteArrayServletOutputStream();
         when(response.getOutputStream()).thenReturn(sos);
-        when(request.getRequestURI()).thenReturn("/system/console/" + requestIdCaptor.getValue() + ".json" );
+        when(request.getRequestURI()).thenReturn("/system/console/" + requestIdCaptor.getValue() + ".json");
 
         logServlet.renderContent(request, response);
         byte[] data = IOUtils.toByteArray(new GZIPInputStream(new ByteArrayInputStream(sos.baos.toByteArray())));
-        JsonObject json = Json.createReader(new StringReader(new String(data, "UTF-8"))).readObject();
+        JsonObject json =
+                Json.createReader(new StringReader(new String(data, "UTF-8"))).readObject();
         assertEquals("GET", json.getString("method"));
         assertEquals(2, json.getJsonArray("requestProgressLogs").size());
 
-        verify(response).setHeader("Content-Encoding" , "gzip");
+        verify(response).setHeader("Content-Encoding", "gzip");
     }
 
     private TracerLogServlet newLogServlet() {
-        return new TracerLogServlet(context.bundleContext(), 50, 60*15, true, true);
+        return new TracerLogServlet(context.bundleContext(), 50, 60 * 15, true, true);
     }
 
     @Test
-    public void pluginRendering() throws Exception{
+    public void pluginRendering() throws Exception {
         TracerLogServlet logServlet = newLogServlet();
-        when(request.getRequestURI()).thenReturn("/system/console/tracer" );
+        when(request.getRequestURI()).thenReturn("/system/console/tracer");
 
         StringWriter sw = new StringWriter();
         when(response.getWriter()).thenReturn(new PrintWriter(sw));
@@ -168,6 +175,7 @@ public class TracerLogServletTest {
 
     private static class ByteArrayServletOutputStream extends ServletOutputStream {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
         @Override
         public void write(int b) throws IOException {
             baos.write(b);
@@ -184,8 +192,6 @@ public class TracerLogServletTest {
         }
 
         @Override
-        public void setWriteListener(WriteListener writeListener) {
-
-        }
+        public void setWriteListener(WriteListener writeListener) {}
     }
 }

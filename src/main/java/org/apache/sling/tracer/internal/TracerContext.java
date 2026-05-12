@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.tracer.internal;
 
 import java.util.Arrays;
@@ -36,9 +35,9 @@ class TracerContext {
      * level (OAK-2304)
      */
     private static final String[] IGNORABLE_QUERIES = {
-            "SELECT * FROM [nt:base] WHERE [jcr:uuid] = $id",
-            "SELECT * FROM [nt:base] WHERE PROPERTY([rep:members], 'WeakReference') = $uuid",
-            "SELECT * FROM [rep:Authorizable]WHERE [rep:principalName] = $principalName",
+        "SELECT * FROM [nt:base] WHERE [jcr:uuid] = $id",
+        "SELECT * FROM [nt:base] WHERE PROPERTY([rep:members], 'WeakReference') = $uuid",
+        "SELECT * FROM [rep:Authorizable]WHERE [rep:principalName] = $principalName",
     };
 
     private static final int LOG_BUFFER_SIZE = 50;
@@ -61,11 +60,11 @@ class TracerContext {
         this.tracers = tracers;
         this.recording = recording;
 
-        //Say if the list is like com.foo;level=trace,com.foo.bar;level=info.
+        // Say if the list is like com.foo;level=trace,com.foo.bar;level=info.
         // Then first config would result in a match and later config would
         // not be able to suppress the logs from a child category
-        //To handle such cases we sort the config. With having more depth i.e. more specific
-        //coming first and others later
+        // To handle such cases we sort the config. With having more depth i.e. more specific
+        // coming first and others later
         Arrays.sort(tracers);
     }
 
@@ -87,10 +86,9 @@ class TracerContext {
 
     public boolean log(TracerConfig tc, Level level, String logger, String format, Object[] params) {
         FormattingTuple tuple = null;
-        if (QUERY_LOGGER.equals(logger)
-                && params != null && params.length == 2) {
-            if (logQuery(String.valueOf(params[1]))){
-                //Get original log message
+        if (QUERY_LOGGER.equals(logger) && params != null && params.length == 2) {
+            if (logQuery(String.valueOf(params[1]))) {
+                // Get original log message
                 tuple = logWithLoggerName(logger, format, params);
             }
         } else {
