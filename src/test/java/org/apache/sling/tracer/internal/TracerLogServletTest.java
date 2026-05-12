@@ -31,6 +31,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.io.IOUtils;
@@ -43,13 +46,20 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 import static org.apache.sling.tracer.internal.TestUtil.createTracker;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -157,8 +167,18 @@ public class TracerLogServletTest {
         verify(response).setHeader("Content-Encoding", "gzip");
     }
 
+    @SuppressWarnings("unchecked")
     private TracerLogServlet newLogServlet() {
-        return new TracerLogServlet(context.bundleContext(), 50, 60 * 15, true, true);
+        Bundle mockBundle = mock(Bundle.class);
+        when(mockBundle.findEntries(anyString(), anyString(), anyBoolean())).thenReturn(Collections.emptyEnumeration());
+        when(mockBundle.getHeaders()).thenReturn(new Hashtable<>());
+
+        BundleContext mockBc = mock(BundleContext.class);
+        when(mockBc.getBundle()).thenReturn(mockBundle);
+        when(mockBc.registerService(anyString(), any(), any(Dictionary.class)))
+                .thenReturn(mock(ServiceRegistration.class));
+
+        return new TracerLogServlet(mockBc, 50, 60 * 15, true, true);
     }
 
     @Test

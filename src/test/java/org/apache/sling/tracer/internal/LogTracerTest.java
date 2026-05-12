@@ -32,8 +32,11 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
@@ -44,6 +47,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestProgressTracker;
+import org.apache.sling.testing.mock.osgi.MockBundle;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContextCallback;
@@ -63,7 +67,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -104,8 +112,8 @@ public class LogTracerTest {
 
     @Test
     public void enableTracerLogServlet() throws Exception {
-        LogTracer tracer = context.registerInjectActivateService(
-                new LogTracer(), ImmutableMap.<String, Object>of("enabled", "true", "servletEnabled", "true"));
+        LogTracer tracer = activateLogTracerWithServlet(
+                ImmutableMap.<String, Object>of("enabled", "true", "servletEnabled", "true"));
         assertEquals(2, context.getServices(Filter.class, null).length);
         assertNotNull(context.getService(Servlet.class));
 
@@ -121,16 +129,14 @@ public class LogTracerTest {
 
     @Test
     public void enableTracerLogServletWithConfig() throws Exception {
-        LogTracer tracer = context.registerInjectActivateService(
-                new LogTracer(),
-                ImmutableMap.<String, Object>builder()
-                        .put("enabled", "true")
-                        .put("servletEnabled", "true")
-                        .put("recordingCacheSizeInMB", "17")
-                        .put("recordingCacheDurationInSecs", "100")
-                        .put("recordingCompressionEnabled", "false")
-                        .put("gzipResponse", "true")
-                        .build());
+        activateLogTracerWithServlet(ImmutableMap.<String, Object>builder()
+                .put("enabled", "true")
+                .put("servletEnabled", "true")
+                .put("recordingCacheSizeInMB", "17")
+                .put("recordingCacheDurationInSecs", "100")
+                .put("recordingCompressionEnabled", "false")
+                .put("gzipResponse", "true")
+                .build());
         assertEquals(2, context.getServices(Filter.class, null).length);
         assertNotNull(context.getService(Servlet.class));
 
@@ -143,14 +149,12 @@ public class LogTracerTest {
 
     @Test
     public void enableTracerLogServletWithConfigGzip() throws Exception {
-        LogTracer tracer = context.registerInjectActivateService(
-                new LogTracer(),
-                ImmutableMap.<String, Object>builder()
-                        .put("enabled", "true")
-                        .put("servletEnabled", "true")
-                        .put("recordingCompressionEnabled", "true")
-                        .put("gzipResponse", "true")
-                        .build());
+        activateLogTracerWithServlet(ImmutableMap.<String, Object>builder()
+                .put("enabled", "true")
+                .put("servletEnabled", "true")
+                .put("recordingCompressionEnabled", "true")
+                .put("gzipResponse", "true")
+                .build());
         assertEquals(2, context.getServices(Filter.class, null).length);
         assertNotNull(context.getService(Servlet.class));
 
@@ -361,8 +365,24 @@ public class LogTracerTest {
     }
 
     private void activateTracerAndServlet() {
-        context.registerInjectActivateService(
-                new LogTracer(), ImmutableMap.<String, Object>of("enabled", "true", "servletEnabled", "true"));
+        activateLogTracerWithServlet(ImmutableMap.<String, Object>of("enabled", "true", "servletEnabled", "true"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private LogTracer activateLogTracerWithServlet(Map<String, Object> props) {
+        // Felix WebConsole 4.9.10 calls Bundle.findEntries() during activate(), which
+        // MockBundle does not implement. Create a spy that stubs findEntries() and inject
+        // it into MockBundleContext via reflection so getBundle() returns the stub.
+        MockBundle bundleSpy = spy((MockBundle) context.bundleContext().getBundle());
+        doReturn(Collections.emptyEnumeration()).when(bundleSpy).findEntries(anyString(), anyString(), anyBoolean());
+        try {
+            Field bundleField = context.bundleContext().getClass().getDeclaredField("bundle");
+            bundleField.setAccessible(true);
+            bundleField.set(context.bundleContext(), bundleSpy);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+        return (LogTracer) context.registerInjectActivateService(new LogTracer(), props);
     }
 
     private FilterChain prepareChain(FilterChain end) throws InvalidSyntaxException {
