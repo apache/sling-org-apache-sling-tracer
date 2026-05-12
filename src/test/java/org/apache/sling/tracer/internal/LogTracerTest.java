@@ -16,14 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.tracer.internal;
-
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.util.Collection;
-import java.util.List;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -35,6 +28,12 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.Collection;
+import java.util.List;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
@@ -94,8 +93,8 @@ public class LogTracerTest {
 
     @Test
     public void enableTracer() throws Exception {
-        LogTracer tracer = context.registerInjectActivateService(new LogTracer(),
-                ImmutableMap.<String, Object>of("enabled", "true"));
+        LogTracer tracer = context.registerInjectActivateService(
+                new LogTracer(), ImmutableMap.<String, Object>of("enabled", "true"));
         assertEquals(2, context.getServices(Filter.class, null).length);
         assertNull(context.getService(Servlet.class));
 
@@ -105,15 +104,15 @@ public class LogTracerTest {
 
     @Test
     public void enableTracerLogServlet() throws Exception {
-        LogTracer tracer = context.registerInjectActivateService(new LogTracer(),
-                ImmutableMap.<String, Object>of("enabled", "true", "servletEnabled", "true"));
+        LogTracer tracer = context.registerInjectActivateService(
+                new LogTracer(), ImmutableMap.<String, Object>of("enabled", "true", "servletEnabled", "true"));
         assertEquals(2, context.getServices(Filter.class, null).length);
         assertNotNull(context.getService(Servlet.class));
 
         TracerLogServlet logServlet = (TracerLogServlet) context.getService(Servlet.class);
         assertEquals(true, logServlet.isCompressRecording());
         assertEquals(50, logServlet.getCacheSizeInMB());
-        assertEquals(60*15, logServlet.getCacheDurationInSecs());
+        assertEquals(60 * 15, logServlet.getCacheDurationInSecs());
 
         MockOsgi.deactivate(tracer, context.bundleContext());
         assertNull(context.getService(Filter.class));
@@ -122,7 +121,8 @@ public class LogTracerTest {
 
     @Test
     public void enableTracerLogServletWithConfig() throws Exception {
-        LogTracer tracer = context.registerInjectActivateService(new LogTracer(),
+        LogTracer tracer = context.registerInjectActivateService(
+                new LogTracer(),
                 ImmutableMap.<String, Object>builder()
                         .put("enabled", "true")
                         .put("servletEnabled", "true")
@@ -130,8 +130,7 @@ public class LogTracerTest {
                         .put("recordingCacheDurationInSecs", "100")
                         .put("recordingCompressionEnabled", "false")
                         .put("gzipResponse", "true")
-                        .build()
-                );
+                        .build());
         assertEquals(2, context.getServices(Filter.class, null).length);
         assertNotNull(context.getService(Servlet.class));
 
@@ -144,14 +143,14 @@ public class LogTracerTest {
 
     @Test
     public void enableTracerLogServletWithConfigGzip() throws Exception {
-        LogTracer tracer = context.registerInjectActivateService(new LogTracer(),
+        LogTracer tracer = context.registerInjectActivateService(
+                new LogTracer(),
                 ImmutableMap.<String, Object>builder()
                         .put("enabled", "true")
                         .put("servletEnabled", "true")
                         .put("recordingCompressionEnabled", "true")
                         .put("gzipResponse", "true")
-                        .build()
-        );
+                        .build());
         assertEquals(2, context.getServices(Filter.class, null).length);
         assertNotNull(context.getService(Servlet.class));
 
@@ -159,7 +158,6 @@ public class LogTracerTest {
         assertEquals(true, logServlet.isCompressRecording());
         assertEquals(true, logServlet.isGzipResponse());
     }
-
 
     @Test
     public void noTurboFilterRegisteredUnlessTracingRequested() throws Exception {
@@ -196,8 +194,7 @@ public class LogTracerTest {
 
         Filter filter = getFilter(false);
         filter.doFilter(request, response, chain);
-        assertNull("TurboFilter should get removed once request is done",
-                context.getService(TurboFilter.class));
+        assertNull("TurboFilter should get removed once request is done", context.getService(TurboFilter.class));
     }
 
     @Test
@@ -217,8 +214,7 @@ public class LogTracerTest {
 
         Filter filter = getFilter(true);
         filter.doFilter(request, response, chain);
-        assertNull("TurboFilter should get removed once request is done",
-                context.getService(TurboFilter.class));
+        assertNull("TurboFilter should get removed once request is done", context.getService(TurboFilter.class));
     }
 
     @Test
@@ -228,7 +224,7 @@ public class LogTracerTest {
 
         when(request.getParameter(LogTracer.PARAM_TRACER_CONFIG)).thenReturn("a.b.c;level=trace,a.b;level=debug");
         activateTracer();
-        Level oldLevel =  rootLogger().getLevel();
+        Level oldLevel = rootLogger().getLevel();
         rootLogger().setLevel(Level.INFO);
 
         FilterChain chain = new FilterChain() {
@@ -247,7 +243,7 @@ public class LogTracerTest {
                 getLogger("a.b.c").trace("a.b.c-trace");
                 getLogger("a.b.c.d").trace("a.b.c.d-trace");
 
-                if (getLogger("a.b.c").isTraceEnabled()){
+                if (getLogger("a.b.c").isTraceEnabled()) {
                     getLogger("a.b.c").trace("a.b.c-trace2");
                 }
             }
@@ -274,9 +270,9 @@ public class LogTracerTest {
     }
 
     @Test
-    public void recordingWithoutTracing() throws Exception{
+    public void recordingWithoutTracing() throws Exception {
         activateTracerAndServlet();
-        MockSlingHttpServletRequest request = new MockSlingHttpServletRequest(context.bundleContext()){
+        MockSlingHttpServletRequest request = new MockSlingHttpServletRequest(context.bundleContext()) {
             @Override
             public RequestProgressTracker getRequestProgressTracker() {
                 return createTracker("x", "y");
@@ -295,7 +291,7 @@ public class LogTracerTest {
             @Override
             public void doFilter(ServletRequest request, ServletResponse response)
                     throws IOException, ServletException {
-                //No TurboFilter should be registered if tracing is not requested
+                // No TurboFilter should be registered if tracing is not requested
                 assertNull(context.getService(TurboFilter.class));
             }
         };
@@ -304,21 +300,21 @@ public class LogTracerTest {
 
         String requestId = getRequestId(response);
         assertNotNull(requestId);
-        Recording r = ((TracerLogServlet)context.getService(Servlet.class)).getRecording(requestId);
+        Recording r = ((TracerLogServlet) context.getService(Servlet.class)).getRecording(requestId);
         assertTrue(r instanceof JSONRecording);
         JSONRecording jr = (JSONRecording) r;
 
         StringWriter sw = new StringWriter();
         jr.render(sw);
         JsonObject json = Json.createReader(new StringReader(sw.toString())).readObject();
-        
+
         assertEquals(2, json.getJsonArray("requestProgressLogs").size());
     }
 
     @Test
-    public void recordingWithTracing() throws Exception{
+    public void recordingWithTracing() throws Exception {
         activateTracerAndServlet();
-        MockSlingHttpServletRequest request = new MockSlingHttpServletRequest(context.bundleContext()){
+        MockSlingHttpServletRequest request = new MockSlingHttpServletRequest(context.bundleContext()) {
             @Override
             public RequestProgressTracker getRequestProgressTracker() {
                 return createTracker("x", "y");
@@ -348,27 +344,25 @@ public class LogTracerTest {
 
         String requestId = getRequestId(response);
         assertNotNull(requestId);
-        Recording r = ((TracerLogServlet)context.getService(Servlet.class)).getRecording(requestId);
+        Recording r = ((TracerLogServlet) context.getService(Servlet.class)).getRecording(requestId);
         assertTrue(r instanceof JSONRecording);
         JSONRecording jr = (JSONRecording) r;
 
         StringWriter sw = new StringWriter();
         jr.render(sw);
         JsonObject json = Json.createReader(new StringReader(sw.toString())).readObject();
-        
+
         assertEquals(2, json.getJsonArray("requestProgressLogs").size());
         assertEquals(1, json.getJsonArray("logs").size());
     }
 
-
     private void activateTracer() {
-        context.registerInjectActivateService(new LogTracer(),
-                ImmutableMap.<String, Object>of("enabled", "true"));
+        context.registerInjectActivateService(new LogTracer(), ImmutableMap.<String, Object>of("enabled", "true"));
     }
 
     private void activateTracerAndServlet() {
-        context.registerInjectActivateService(new LogTracer(),
-                ImmutableMap.<String, Object>of("enabled", "true", "servletEnabled", "true"));
+        context.registerInjectActivateService(
+                new LogTracer(), ImmutableMap.<String, Object>of("enabled", "true", "servletEnabled", "true"));
     }
 
     private FilterChain prepareChain(FilterChain end) throws InvalidSyntaxException {
@@ -378,8 +372,7 @@ public class LogTracerTest {
     }
 
     private Filter getFilter(boolean slingFilter) throws InvalidSyntaxException {
-        Collection<ServiceReference<Filter>> refs =
-                context.bundleContext().getServiceReferences(Filter.class, null);
+        Collection<ServiceReference<Filter>> refs = context.bundleContext().getServiceReferences(Filter.class, null);
         ServiceReference<Filter> result = null;
         for (ServiceReference<Filter> ref : refs) {
             if (slingFilter && ref.getProperty("sling.filter.scope") != null) {
@@ -397,8 +390,8 @@ public class LogTracerTest {
         throw new AssertionError("No filter found");
     }
 
-    private static LoggerContext getLogContext(){
-        return (LoggerContext)LoggerFactory.getILoggerFactory();
+    private static LoggerContext getLogContext() {
+        return (LoggerContext) LoggerFactory.getILoggerFactory();
     }
 
     private static ch.qos.logback.classic.Logger rootLogger() {
@@ -409,7 +402,7 @@ public class LogTracerTest {
         private List<String> msgs = Lists.newArrayList();
         private TestAppender appender = new TestAppender();
 
-        public List<String> getLogs(){
+        public List<String> getLogs() {
             return msgs;
         }
 
@@ -426,7 +419,7 @@ public class LogTracerTest {
             rootLogger().detachAppender(appender);
         }
 
-        private class TestAppender extends ListAppender<ILoggingEvent>{
+        private class TestAppender extends ListAppender<ILoggingEvent> {
             @Override
             protected void append(ILoggingEvent iLoggingEvent) {
                 msgs.add(iLoggingEvent.getFormattedMessage());
@@ -439,19 +432,18 @@ public class LogTracerTest {
         private final FilterChain delegate;
         private int pos;
 
-        public FilterChainImpl(FilterChain delegate, Filter ... filter){
+        public FilterChainImpl(FilterChain delegate, Filter... filter) {
             this.delegate = delegate;
             this.filters = filter;
         }
 
         @Override
         public void doFilter(ServletRequest request, ServletResponse response) throws IOException, ServletException {
-            if (pos == filters.length){
+            if (pos == filters.length) {
                 delegate.doFilter(request, response);
             } else {
                 filters[pos++].doFilter(request, response, this);
             }
         }
     }
-
 }

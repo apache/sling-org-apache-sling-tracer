@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.tracer.internal;
 
 import org.jetbrains.annotations.Nullable;
@@ -49,8 +48,8 @@ class CallerFinder {
             if (i > 0) {
                 StackTraceElement next = stack[i - 1];
 
-                //now scan each element and check if the *next* stack element belongs to any
-                //api package. If yes then current stack would be the caller
+                // now scan each element and check if the *next* stack element belongs to any
+                // api package. If yes then current stack would be the caller
                 for (String pkg : apiPkgs) {
                     if (next.getClassName().startsWith(pkg)) {
                         return current;

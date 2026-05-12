@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.tracer.internal;
 
 class Util {
@@ -31,15 +30,15 @@ class Util {
         return s;
     }
 
-    static String nullSafeString(Object o){
-        if (o != null){
+    static String nullSafeString(Object o) {
+        if (o != null) {
             return o.toString();
         }
         return null;
     }
 
-    static String nullSafeTrim(String s){
-        if(s == null){
+    static String nullSafeTrim(String s) {
+        if (s == null) {
             return "";
         }
         return s.trim();

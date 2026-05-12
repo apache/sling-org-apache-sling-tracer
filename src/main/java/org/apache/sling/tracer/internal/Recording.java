@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.tracer.internal;
 
 import ch.qos.logback.classic.Level;
@@ -26,19 +25,13 @@ import org.slf4j.helpers.FormattingTuple;
 interface Recording {
     Recording NOOP = new Recording() {
         @Override
-        public void log(TracerConfig tc, Level level, String logger, FormattingTuple tuple) {
-
-        }
+        public void log(TracerConfig tc, Level level, String logger, FormattingTuple tuple) {}
 
         @Override
-        public void registerTracker(RequestProgressTracker tracker) {
-
-        }
+        public void registerTracker(RequestProgressTracker tracker) {}
 
         @Override
-        public void recordCategory(String loggerName) {
-
-        }
+        public void recordCategory(String loggerName) {}
     };
 
     void log(TracerConfig tc, Level level, String logger, FormattingTuple tuple);

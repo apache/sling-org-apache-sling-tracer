@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.tracer.internal;
 
 import javax.servlet.http.HttpServletResponse;
@@ -32,13 +31,13 @@ import static org.mockito.Mockito.when;
 
 class TestUtil {
 
-    static RequestProgressTracker createTracker(String ... logs){
+    static RequestProgressTracker createTracker(String... logs) {
         RequestProgressTracker tracker = mock(RequestProgressTracker.class);
         when(tracker.getMessages()).thenReturn(asList(logs).iterator());
         return tracker;
     }
 
-    static String getRequestId(HttpServletResponse response){
+    static String getRequestId(HttpServletResponse response) {
         ArgumentCaptor<String> requestIdCaptor = ArgumentCaptor.forClass(String.class);
         verify(response).setHeader(eq(TracerLogServlet.HEADER_TRACER_REQUEST_ID), requestIdCaptor.capture());
         return requestIdCaptor.getValue();

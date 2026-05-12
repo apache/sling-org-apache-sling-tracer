@@ -16,8 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.tracer.internal;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -32,10 +35,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
@@ -66,8 +65,12 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
 
     private final boolean gzipResponse;
 
-    public TracerLogServlet(BundleContext context, int cacheSizeInMB, long cacheDurationInSecs,
-                            boolean compressionEnabled, boolean gzipResponse) {
+    public TracerLogServlet(
+            BundleContext context,
+            int cacheSizeInMB,
+            long cacheDurationInSecs,
+            boolean compressionEnabled,
+            boolean gzipResponse) {
         super(LABEL, "Sling Tracer", "Sling", null);
         this.compressRecording = compressionEnabled;
         this.cacheDurationInSecs = cacheDurationInSecs;
@@ -142,7 +145,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
             final Set<String> toRemove = new HashSet<>();
             final ArrayList<Entry> list = new ArrayList<>(this.cache.values());
             Collections.sort(list);
-            if ( this.currentSize > this.maxSize ) {
+            if (this.currentSize > this.maxSize) {
                 while (this.currentSize > this.maxSize && !list.isEmpty()) {
                     final Entry entry = list.remove(0);
                     toRemove.add(entry.recording.getRequestId());
@@ -150,13 +153,13 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
                 }
             }
             final long time = System.currentTimeMillis() - this.cacheDurationInMillis;
-            for(final Entry entry : list) {
-                if ( entry.lastAccessed < time ) {
+            for (final Entry entry : list) {
+                if (entry.lastAccessed < time) {
                     toRemove.add(entry.recording.getRequestId());
                     currentSize -= entry.recording.size();
                 }
             }
-            for(final String key : toRemove) {
+            for (final String key : toRemove) {
                 this.cache.remove(key);
             }
         }
@@ -179,18 +182,19 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
         public synchronized List<JSONRecording> asList() {
             checkCache();
             final List<JSONRecording> result = new ArrayList<>();
-            for(final Entry entry : this.cache.values()) {
+            for (final Entry entry : this.cache.values()) {
                 result.add(entry.recording);
             }
             return result;
         }
     }
 
-    //~-----------------------------------------------< WebConsole Plugin >
+    // ~-----------------------------------------------< WebConsole Plugin >
 
     @Override
-    protected void renderContent(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if (isHtmlRequest(request)){
+    protected void renderContent(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        if (isHtmlRequest(request)) {
             PrintWriter pw = response.getWriter();
             renderStatus(pw);
             renderRequests(pw);
@@ -201,7 +205,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
                 boolean responseDone = false;
                 if (requestId != null) {
                     JSONRecording recording = cache.get(requestId);
-                    if (recording != null){
+                    if (recording != null) {
                         boolean shouldGZip = prepareForGZipResponse(request, response);
                         responseDone = recording.render(response.getOutputStream(), shouldGZip);
                     }
@@ -221,8 +225,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-            throws IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         if (req.getParameter(CLEAR) != null) {
             resetCache();
             resp.sendRedirect(req.getRequestURI());
@@ -264,13 +267,15 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
     }
 
     private void renderStatus(PrintWriter pw) {
-        pw.printf("<p class='statline'>Log Tracer Recordings: %d recordings, %s memory " +
-                "(Max %dMB, Expired in %d secs)</p>%n", cache.size(),
-                memorySize(), cacheSizeInMB, cacheDurationInSecs);
+        pw.printf(
+                "<p class='statline'>Log Tracer Recordings: %d recordings, %s memory "
+                        + "(Max %dMB, Expired in %d secs)</p>%n",
+                cache.size(), memorySize(), cacheSizeInMB, cacheDurationInSecs);
 
         pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>");
         pw.println("<span style='float: left; margin-left: 1em'>Tracer Recordings</span>");
-        pw.println("<form method='POST'><input type='hidden' name='clear' value='clear'><input type='submit' value='Clear' class='ui-state-default ui-corner-all'></form>");
+        pw.println(
+                "<form method='POST'><input type='hidden' name='clear' value='clear'><input type='submit' value='Clear' class='ui-state-default ui-corner-all'></form>");
         pw.println("</div>");
     }
 
@@ -279,19 +284,17 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
     }
 
     private void renderRequests(PrintWriter pw) {
-        if (cache.size() > 0){
+        if (cache.size() > 0) {
             pw.println("<ol>");
             List<JSONRecording> recordings = cache.asList();
             SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
             Collections.sort(recordings);
-            for (JSONRecording r : recordings){
+            for (JSONRecording r : recordings) {
                 String id = r.getRequestId();
                 String date = sdf.format(new Date(r.getStart()));
-                pw.printf("<li>%s - <a href='%s/%s.json'>%s</a> - %s (%s) (%dms)</li>",
-                        date, LABEL, id, id,
-                        r.getUri(),
-                        humanReadableByteCount(r.size()),
-                        r.getTimeTaken());
+                pw.printf(
+                        "<li>%s - <a href='%s/%s.json'>%s</a> - %s (%s) (%dms)</li>",
+                        date, LABEL, id, id, r.getUri(), humanReadableByteCount(r.size()), r.getTimeTaken());
             }
             pw.println("</ol>");
         }
@@ -301,22 +304,22 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
         String requestUri = request.getRequestURI();
         int lastSlash = requestUri.lastIndexOf('/');
         int lastDot = requestUri.indexOf('.', lastSlash + 1);
-        if (lastDot > 0){
+        if (lastDot > 0) {
             return requestUri.substring(lastSlash + 1, lastDot);
         }
         return null;
     }
 
-    //~-----------------------------------------------< TraceLogRecorder >
+    // ~-----------------------------------------------< TraceLogRecorder >
 
     @Override
     public Recording startRecording(HttpServletRequest request, HttpServletResponse response) {
-        if (request.getHeader(HEADER_TRACER_RECORDING) == null){
+        if (request.getHeader(HEADER_TRACER_RECORDING) == null) {
             return Recording.NOOP;
         }
 
-        if (request.getAttribute(ATTR_RECORDING) != null){
-            //Already processed
+        if (request.getAttribute(ATTR_RECORDING) != null) {
+            // Already processed
             return getRecordingForRequest(request);
         }
 
@@ -332,7 +335,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
     @Override
     public Recording getRecordingForRequest(HttpServletRequest request) {
         Recording recording = (Recording) request.getAttribute(ATTR_RECORDING);
-        if (recording == null){
+        if (recording == null) {
             recording = Recording.NOOP;
         }
         return recording;
@@ -381,7 +384,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
         return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
 
-    void resetCache(){
+    void resetCache() {
         cache.clear();
     }
 }

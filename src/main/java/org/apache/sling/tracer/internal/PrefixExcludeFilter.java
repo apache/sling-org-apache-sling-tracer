@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.tracer.internal;
 
 import java.util.ArrayList;
@@ -27,7 +26,7 @@ import java.util.List;
  * Filter which returns false if the package of stack trace element
  * is part of exclude list of prefixes
  */
-class PrefixExcludeFilter implements CallerFilter{
+class PrefixExcludeFilter implements CallerFilter {
     private final List<String> prefixesToExclude;
 
     public PrefixExcludeFilter(List<String> prefixes) {
@@ -36,7 +35,7 @@ class PrefixExcludeFilter implements CallerFilter{
 
     public static PrefixExcludeFilter from(String filter) {
         final List<String> prefixes = new ArrayList<>();
-        for(String v : filter.split("\\|")) {
+        for (String v : filter.split("\\|")) {
             v = v.trim();
             if (!v.isEmpty()) {
                 prefixes.add(v);
@@ -48,8 +47,8 @@ class PrefixExcludeFilter implements CallerFilter{
     @Override
     public boolean include(StackTraceElement ste) {
         String className = ste.getClassName();
-        for (String prefix : prefixesToExclude){
-            if (className.startsWith(prefix)){
+        for (String prefix : prefixesToExclude) {
+            if (className.startsWith(prefix)) {
                 return false;
             }
         }

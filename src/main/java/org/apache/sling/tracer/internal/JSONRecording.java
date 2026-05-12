@@ -16,8 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.tracer.internal;
+
+import javax.servlet.http.HttpServletRequest;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -40,8 +41,6 @@ import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import javax.servlet.http.HttpServletRequest;
-
 import ch.qos.logback.classic.Level;
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.utils.json.JSONWriter;
@@ -58,8 +57,8 @@ import static org.apache.sling.tracer.internal.Util.nullSafeTrim;
 
 class JSONRecording implements Recording, Comparable<JSONRecording> {
     private static final String[] QUERY_API_PKGS = {
-            "org.apache.sling.resourceresolver", //Sling package would come first in stack so listed first
-            "org.apache.jackrabbit.oak"
+        "org.apache.sling.resourceresolver", // Sling package would come first in stack so listed first
+        "org.apache.jackrabbit.oak"
     };
     private static final Object[] EMPTY = new Object[0];
     private static final Logger log = LoggerFactory.getLogger(JSONRecording.class);
@@ -103,7 +102,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
     }
 
     public int size() {
-        if (json != null){
+        if (json != null) {
             return json.length;
         }
         return 0;
@@ -125,7 +124,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         return start;
     }
 
-    //~---------------------------------------< Recording >
+    // ~---------------------------------------< Recording >
 
     @Override
     public void log(TracerConfig tc, Level level, String logger, FormattingTuple tuple) {
@@ -150,8 +149,8 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
             if (json == null) {
                 json = toJSON();
 
-                //Let the tracker and other references go to
-                //not occupy memory
+                // Let the tracker and other references go to
+                // not occupy memory
                 tracker = null;
                 queries.clear();
                 logs.clear();
@@ -207,10 +206,10 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
             jw.key("requestProgressLogs");
             jw.array();
             Iterator<String> it = tracker.getMessages();
-            //Per docs iterator can be null
+            // Per docs iterator can be null
             while (it != null && it.hasNext()) {
                 String entry = it.next();
-                if (entry != null){
+                if (entry != null) {
                     jw.value(entry.trim());
                 }
             }
@@ -271,18 +270,18 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         }
 
         private static List<StackTraceElement> getCallerData(TracerConfig tc) {
-            if (tc.isReportCallerStack()){
+            if (tc.isReportCallerStack()) {
                 return tc.getCallerReporter().report();
             }
             return Collections.emptyList();
         }
 
         private static String[] getParams(FormattingTuple tuple) {
-            //Eagerly convert arg to string so that if arg is bound by context like
-            //session then it gets evaluated when that is valid i.e. at time of call itself
+            // Eagerly convert arg to string so that if arg is bound by context like
+            // session then it gets evaluated when that is valid i.e. at time of call itself
             Object[] params = tuple.getArgArray();
             String[] strParams = null;
-            if (params != null){
+            if (params != null) {
                 strParams = new String[params.length];
                 for (int i = 0; i < params.length; i++) {
                     strParams[i] = toString(params[i]);
@@ -292,7 +291,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         }
 
         private static String toString(Object o) {
-            //Make use of Slf4j null safe toString support!
+            // Make use of Slf4j null safe toString support!
             return MessageFormatter.format("{}", o).getMessage();
         }
 
@@ -320,12 +319,11 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
 
             Throwable t = tuple.getThrowable();
             if (t != null) {
-                //Later we can look into using Logback Throwable handling
+                // Later we can look into using Logback Throwable handling
                 jw.key("exception").value(getStackTraceAsString(t));
-
             }
 
-            if (!caller.isEmpty()){
+            if (!caller.isEmpty()) {
                 jw.key("caller");
                 jw.array();
                 for (StackTraceElement o : caller) {
@@ -362,40 +360,41 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         int subPlans = 0;
 
         public void record(Level level, String logger, FormattingTuple tuple) {
-            //Assuming in a series of log statement from query package we see 'query'
-            //and then 'plan' then once both are not null then it means that one query
-            //execution is complete and we push the entry and reset the state
-            //This is done as we do not have a definitive way to determine when
-            //a given query processing is done
+            // Assuming in a series of log statement from query package we see 'query'
+            // and then 'plan' then once both are not null then it means that one query
+            // execution is complete and we push the entry and reset the state
+            // This is done as we do not have a definitive way to determine when
+            // a given query processing is done
             attemptQueryEntry();
 
-            //TODO Query time. Change Oak to provide this information via some
-            //dedicated Audit logging such that below reliance on impl details
-            //can be avoided
+            // TODO Query time. Change Oak to provide this information via some
+            // dedicated Audit logging such that below reliance on impl details
+            // can be avoided
             String msg = tuple.getMessage();
             if (Level.DEBUG == level && msg != null) {
                 Object[] args = tuple.getArgArray() == null ? EMPTY : tuple.getArgArray();
-                if (query == null){
+                if (query == null) {
                     if ("org.apache.jackrabbit.oak.query.QueryEngineImpl".equals(logger)
-                            && msg.contains("Parsing") && args.length == 2){
-                        //LOG.debug("Parsing {} statement: {}", language, statement);
+                            && msg.contains("Parsing")
+                            && args.length == 2) {
+                        // LOG.debug("Parsing {} statement: {}", language, statement);
                         query = nullSafeString(args[1]);
                         caller = determineCaller();
                     }
                 }
 
-                //Plan for union query are logged separately
-                if (plan == null){
-                    if ("org.apache.jackrabbit.oak.query.QueryImpl".equals(logger)
-                            && msg.startsWith("query plan ")){
-                        //logDebug("query execute " + statement);
+                // Plan for union query are logged separately
+                if (plan == null) {
+                    if ("org.apache.jackrabbit.oak.query.QueryImpl".equals(logger) && msg.startsWith("query plan ")) {
+                        // logDebug("query execute " + statement);
                         if (subPlans == 0) {
                             plan = msg.substring("query plan ".length());
                         } else {
                             subPlans--;
                         }
                     } else if ("org.apache.jackrabbit.oak.query.UnionQueryImpl".equals(logger)
-                            && msg.contains("query union plan") && args.length > 0){
+                            && msg.contains("query union plan")
+                            && args.length > 0) {
                         // LOG.debug("query union plan {}", getPlan());
                         plan = nullSafeString(args[0]);
 
@@ -410,7 +409,8 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         }
 
         private String determineCaller() {
-            StackTraceElement caller = queryCallerFinder.determineCaller(Thread.currentThread().getStackTrace());
+            StackTraceElement caller =
+                    queryCallerFinder.determineCaller(Thread.currentThread().getStackTrace());
             if (caller != null) {
                 return caller.toString();
             }
@@ -421,17 +421,16 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
          * Checks if both plan and query are determined. If yes then pushes them to list
          * and resets the state.
          */
-        public void attemptQueryEntry(){
-            if (query != null && plan != null){
+        public void attemptQueryEntry() {
+            if (query != null && plan != null) {
                 queries.add(new QueryEntry(nullSafeTrim(query), nullSafeTrim(plan), caller));
                 plan = query = null;
             }
         }
 
-        public void done(){
-            //Push any last pending entry i.e. last query
+        public void done() {
+            // Push any last pending entry i.e. last query
             attemptQueryEntry();
         }
     }
-
 }

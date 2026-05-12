@@ -16,15 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.tracer.internal;
-
-import java.io.StringReader;
-import java.io.StringWriter;
 
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.servlet.http.HttpServletRequest;
+
+import java.io.StringReader;
+import java.io.StringWriter;
 
 import ch.qos.logback.classic.Level;
 import org.junit.Test;
@@ -48,15 +47,18 @@ public class JSONRecordingTest {
     private TracerConfig tc = new TracerConfig(TracerContext.QUERY_LOGGER, Level.INFO);
 
     @Test
-    public void logQueries() throws Exception{
+    public void logQueries() throws Exception {
         StringWriter sw = new StringWriter();
 
         when(request.getMethod()).thenReturn("GET");
         JSONRecording r = new JSONRecording("abc", request, true);
 
         MDC.put(MDC_QUERY_ID, "1");
-        r.log(tc, Level.DEBUG, "org.apache.jackrabbit.oak.query.QueryEngineImpl",
-                tuple("Parsing {} statement: {}",  "XPATH", "SELECT FOO"));
+        r.log(
+                tc,
+                Level.DEBUG,
+                "org.apache.jackrabbit.oak.query.QueryEngineImpl",
+                tuple("Parsing {} statement: {}", "XPATH", "SELECT FOO"));
         r.log(tc, Level.DEBUG, QE_LOGGER, tuple("query plan FOO PLAN"));
 
         r.done();
@@ -70,24 +72,33 @@ public class JSONRecordingTest {
     }
 
     @Test
-    public void logUnionQueries() throws Exception{
+    public void logUnionQueries() throws Exception {
         StringWriter sw = new StringWriter();
 
         when(request.getMethod()).thenReturn("GET");
         JSONRecording r = new JSONRecording("abc", request, true);
 
         MDC.put(MDC_QUERY_ID, "1");
-        r.log(tc, Level.DEBUG, "org.apache.jackrabbit.oak.query.QueryEngineImpl",
-                tuple("Parsing {} statement: {}",  "XPATH", "SELECT FOO BAR"));
-        r.log(tc, Level.DEBUG, UNION_QUERY_LOGGER, tuple("query union plan FOO PLAN */ union BAR PLAN", "FOO PLAN */ union BAR PLAN"));
+        r.log(
+                tc,
+                Level.DEBUG,
+                "org.apache.jackrabbit.oak.query.QueryEngineImpl",
+                tuple("Parsing {} statement: {}", "XPATH", "SELECT FOO BAR"));
+        r.log(
+                tc,
+                Level.DEBUG,
+                UNION_QUERY_LOGGER,
+                tuple("query union plan FOO PLAN */ union BAR PLAN", "FOO PLAN */ union BAR PLAN"));
         // Two sub-query plans for the split union
         r.log(tc, Level.DEBUG, QE_LOGGER, tuple("query plan FOO PLAN", "xpath", "FOO PLAN"));
         r.log(tc, Level.DEBUG, QE_LOGGER, tuple("query plan BAR PLAN", "xpath", "BAR PLAN"));
 
-
         MDC.put(MDC_QUERY_ID, "2");
-        r.log(tc, Level.DEBUG, "org.apache.jackrabbit.oak.query.QueryEngineImpl",
-                tuple("Parsing {} statement: {}",  "XPATH", "SELECT FOO"));
+        r.log(
+                tc,
+                Level.DEBUG,
+                "org.apache.jackrabbit.oak.query.QueryEngineImpl",
+                tuple("Parsing {} statement: {}", "XPATH", "SELECT FOO"));
         r.log(tc, Level.DEBUG, QE_LOGGER, tuple("query plan FOO PLAN", "xpath", "FOO PLAN"));
 
         r.done();
@@ -107,7 +118,7 @@ public class JSONRecordingTest {
     }
 
     @Test
-    public void requestTrackerLogs() throws Exception{
+    public void requestTrackerLogs() throws Exception {
         StringWriter sw = new StringWriter();
         JSONRecording r = new JSONRecording("abc", request, true);
 
@@ -121,15 +132,16 @@ public class JSONRecordingTest {
     }
 
     @Test
-    public void logs() throws Exception{
+    public void logs() throws Exception {
         StringWriter sw = new StringWriter();
         JSONRecording r = new JSONRecording("abc", request, true);
 
-        FormattingTuple tp1 = MessageFormatter.arrayFormat("{} is going", new Object[]{"Jack"});
+        FormattingTuple tp1 = MessageFormatter.arrayFormat("{} is going", new Object[] {"Jack"});
         r.log(tc, Level.INFO, "foo", tp1);
         r.log(tc, Level.WARN, "foo.bar", MessageFormatter.arrayFormat("Jill is going", null));
-        r.log(tc, Level.ERROR, "foo.bar",
-                MessageFormatter.arrayFormat("Jack and {} is going", new Object[]{"Jill" , new Exception()}));
+        r.log(tc, Level.ERROR, "foo.bar", MessageFormatter.arrayFormat("Jack and {} is going", new Object[] {
+            "Jill", new Exception()
+        }));
 
         r.done();
         r.render(sw);
@@ -151,12 +163,11 @@ public class JSONRecordingTest {
     }
 
     @Test
-    public void logsWithCaller() throws Exception{
+    public void logsWithCaller() throws Exception {
         StringWriter sw = new StringWriter();
         final JSONRecording r = new JSONRecording("abc", request, true);
 
-        TracerConfig config = new TracerConfig(TracerContext.QUERY_LOGGER,
-                Level.INFO, new CallerStackReporter(20));
+        TracerConfig config = new TracerConfig(TracerContext.QUERY_LOGGER, Level.INFO, new CallerStackReporter(20));
         r.log(config, Level.INFO, "foo", tuple("foo"));
 
         r.done();
@@ -168,11 +179,11 @@ public class JSONRecordingTest {
         assertTrue(l1.getJsonArray("caller").size() > 0);
     }
 
-    private static FormattingTuple tuple(String msg){
+    private static FormattingTuple tuple(String msg) {
         return MessageFormatter.format(msg, null);
     }
 
-    private static FormattingTuple tuple(String msg, String ... params){
+    private static FormattingTuple tuple(String msg, String... params) {
         return MessageFormatter.arrayFormat(msg, params);
     }
 }
